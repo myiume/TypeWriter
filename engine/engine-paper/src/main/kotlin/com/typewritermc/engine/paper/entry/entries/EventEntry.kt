@@ -24,8 +24,6 @@ interface CustomCommandEntry : EventEntry {
     companion object
 }
 
-interface FireTriggerEventEntry : EventEntry
-
 class Event(val player: Player, val context: InteractionContext, val triggers: List<EventTrigger>) {
     constructor(player: Player, context: InteractionContext, vararg triggers: EventTrigger) : this(
         player,

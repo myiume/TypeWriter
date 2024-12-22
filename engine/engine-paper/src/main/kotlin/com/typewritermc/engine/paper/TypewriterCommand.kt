@@ -5,6 +5,7 @@ import com.typewritermc.core.entries.Entry
 import com.typewritermc.core.entries.Page
 import com.typewritermc.core.entries.Query
 import com.typewritermc.core.entries.formattedName
+import com.typewritermc.core.interaction.context
 import com.typewritermc.engine.paper.entry.TriggerableEntry
 import com.typewritermc.engine.paper.entry.audienceState
 import com.typewritermc.engine.paper.entry.entries.*
@@ -12,7 +13,6 @@ import com.typewritermc.engine.paper.entry.inAudience
 import com.typewritermc.engine.paper.entry.temporal.temporalCommands
 import com.typewritermc.engine.paper.entry.triggerFor
 import com.typewritermc.engine.paper.interaction.chatHistory
-import com.typewritermc.core.interaction.context
 import com.typewritermc.engine.paper.ui.CommunicationHandler
 import com.typewritermc.engine.paper.utils.ThreadType
 import com.typewritermc.engine.paper.utils.asMini
@@ -43,7 +43,6 @@ fun typeWriterCommand() = commandTree("typewriter") {
     clearChatCommand()
     connectCommand()
     triggerCommand()
-    fireCommand()
     manifestCommands()
     temporalCommands()
 
@@ -257,21 +256,6 @@ private fun CommandTree.triggerCommand() = literalArgument("trigger") {
         }
     }
 }
-
-private fun CommandTree.fireCommand() = literalArgument("fire") {
-    withPermission("typewriter.fire")
-
-    argument(entryArgument<FireTriggerEventEntry>("entry")) {
-        optionalTarget {
-            anyExecutor { sender, args ->
-                val target = args.targetOrSelfPlayer(sender) ?: return@anyExecutor
-                val entry = args["entry"] as FireTriggerEventEntry
-                entry.eventTriggers.triggerFor(target, context())
-            }
-        }
-    }
-}
-
 
 private fun CommandTree.manifestCommands() = literalArgument("manifest") {
     literalArgument("inspect") {
