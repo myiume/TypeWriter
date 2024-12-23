@@ -26,3 +26,4 @@ In order for the dependencies to be recognized by Typewriter, you need to instal
 These plugins are known to break the plugin so they should **NOT** be installed.
 
 - **interactivechat**: [link](https://www.spigotmc.org/resources/interactivechat-show-items-inventory-in-chat-custom-chat-keywords-bungee-velocity-support.75870/)
+- **CustomNamePlates**: [link](https://polymart.org/resource/customnameplates.2543)
