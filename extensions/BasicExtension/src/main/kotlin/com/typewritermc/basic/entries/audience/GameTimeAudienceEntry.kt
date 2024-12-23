@@ -1,13 +1,10 @@
 package com.typewritermc.basic.entries.audience
 
-import lirand.api.extensions.server.server
 import com.typewritermc.core.books.pages.Colors
-import com.typewritermc.core.extension.annotations.Entry
 import com.typewritermc.core.entries.Ref
-import com.typewritermc.engine.paper.entry.entries.*
 import com.typewritermc.core.entries.ref
-import com.typewritermc.core.utils.point.World
-import com.typewritermc.engine.paper.logger
+import com.typewritermc.core.extension.annotations.Entry
+import com.typewritermc.engine.paper.entry.entries.*
 import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
 import org.bukkit.event.player.PlayerChangedWorldEvent
@@ -41,35 +38,24 @@ class GameTimeAudienceEntry(
     override val id: String = "",
     override val name: String = "",
     override val children: List<Ref<AudienceEntry>> = emptyList(),
-    val world: Var<World> = ConstVar(World.Empty),
     val activeTimes: List<GameTimeRange> = emptyList(),
     override val inverted: Boolean = false,
 ) : AudienceFilterEntry, Invertible {
-    override fun display(): AudienceFilter = GameTimeAudienceFilter(ref(), world, activeTimes)
+    override fun display(): AudienceFilter = GameTimeAudienceFilter(ref(), activeTimes)
 }
 
 class GameTimeAudienceFilter(
     val ref: Ref<out AudienceFilterEntry>,
-    private val world: Var<World>,
     private val activeTimes: List<GameTimeRange>,
 ) : AudienceFilter(ref), TickableDisplay {
     override fun filter(player: Player): Boolean {
-        if (player.world.uid.toString() != world.get(player).identifier) return false
-        val worldTime = player.world.time % 24000
+        val worldTime = player.playerTime % 24000
         return activeTimes.any { worldTime in it }
     }
 
     @EventHandler
     private fun onWorldChange(event: PlayerChangedWorldEvent) {
         event.player.refresh()
-    }
-
-    override fun onPlayerAdd(player: Player) {
-        super.onPlayerAdd(player)
-        val world = server.getWorld(world.get(player).identifier)
-        if (world == null) {
-            logger.warning("World '${this.world}' does not exist, $ref will not work.")
-        }
     }
 
     override fun tick() {
