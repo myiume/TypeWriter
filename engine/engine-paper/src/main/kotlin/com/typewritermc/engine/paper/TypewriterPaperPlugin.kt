@@ -185,7 +185,8 @@ class TypewriterPaperPlugin : KotlinPlugin(), KoinComponent {
     suspend fun unload() {
         TypewriterUnloadEvent().callEvent()
 
-        CommandAPI.unregister("typewriter")
+        if (CommandAPI.isLoaded())
+            CommandAPI.unregister("typewriter")
 
         CustomCommandEntry.unregisterAll()
         get<AudienceManager>().unload()
