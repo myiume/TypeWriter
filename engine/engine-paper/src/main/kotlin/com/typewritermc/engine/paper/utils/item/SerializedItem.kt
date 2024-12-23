@@ -27,7 +27,7 @@ class SerializedItem(
 ) : Item {
     constructor(itemStack: ItemStack) : this(
         itemStack.type,
-        itemStack.itemMeta.displayName()?.plainText() ?: itemStack.type.name,
+        itemStack.itemMeta?.displayName()?.plainText() ?: itemStack.type.name,
         ConstVar(itemStack.amount),
         if (itemStack.type != Material.AIR) Base64.encode(itemStack.serializeAsBytes()) else "",
     )
