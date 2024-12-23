@@ -12,6 +12,7 @@ import com.typewritermc.engine.paper.entry.entity.SingleChildActivity
 import com.typewritermc.engine.paper.entry.entries.EntityActivityEntry
 import com.typewritermc.engine.paper.entry.entries.GenericEntityActivityEntry
 import com.typewritermc.engine.paper.utils.logErrorIfNull
+import com.typewritermc.engine.paper.utils.toBukkitWorld
 
 @Entry("game_time_activity", "A game time activity", Colors.PALATINATE_BLUE, "bi:clock-fill")
 /**
@@ -36,7 +37,6 @@ import com.typewritermc.engine.paper.utils.logErrorIfNull
 class GameTimeActivityEntry(
     override val id: String = "",
     override val name: String = "",
-    val world: String = "",
     val activities: List<GameTimedActivity> = emptyList(),
     val defaultActivity: Ref<out EntityActivityEntry> = emptyRef(),
 ) : GenericEntityActivityEntry {
@@ -45,7 +45,6 @@ class GameTimeActivityEntry(
         currentLocation: PositionProperty
     ): EntityActivity<ActivityContext> {
         return GameTimeActivity(
-            world,
             activities,
             defaultActivity,
             currentLocation,
@@ -72,14 +71,12 @@ class GameTimedActivity(
 }
 
 class GameTimeActivity(
-    private val world: String,
     private val activities: List<GameTimedActivity>,
     private val defaultActivity: Ref<out EntityActivityEntry>,
     startLocation: PositionProperty,
 ) : SingleChildActivity<ActivityContext>(startLocation) {
     override fun currentChild(context: ActivityContext): Ref<out EntityActivityEntry> {
-        val world =
-            server.getWorld(world).logErrorIfNull("Could not find world '$world'") ?: return defaultActivity
+        val world = currentPosition.world.toBukkitWorld()
 
         val worldTime = world.time % 24000
         return activities.firstOrNull { it.contains(worldTime) }
