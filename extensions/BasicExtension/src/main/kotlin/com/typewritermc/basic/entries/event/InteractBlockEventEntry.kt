@@ -4,18 +4,17 @@ import com.typewritermc.core.books.pages.Colors
 import com.typewritermc.core.entries.Query
 import com.typewritermc.core.entries.Ref
 import com.typewritermc.core.extension.annotations.*
-import com.typewritermc.engine.paper.entry.TriggerableEntry
 import com.typewritermc.core.extension.annotations.MaterialProperty.BLOCK
 import com.typewritermc.core.interaction.EntryContextKey
 import com.typewritermc.core.interaction.context
 import com.typewritermc.core.utils.point.Position
-import com.typewritermc.engine.paper.entry.*
+import com.typewritermc.engine.paper.entry.TriggerableEntry
 import com.typewritermc.engine.paper.entry.entries.ConstVar
 import com.typewritermc.engine.paper.entry.entries.EventEntry
 import com.typewritermc.engine.paper.entry.entries.Var
+import com.typewritermc.engine.paper.entry.startDialogueWithOrNextDialogue
 import com.typewritermc.engine.paper.utils.item.Item
 import com.typewritermc.engine.paper.utils.toPosition
-import org.bukkit.Location
 import org.bukkit.Material
 import org.bukkit.entity.Player
 import org.bukkit.event.block.Action
@@ -41,11 +40,15 @@ class InteractBlockEventEntry(
     val location: Optional<Var<Position>> = Optional.empty(),
     @Help("The item the player must be holding when the block is interacted with.")
     val itemInHand: Var<Item> = ConstVar(Item.Empty),
-    @Help("""
+    @Help("The hand the player must be holding the item in")
+    val hand: HoldingHand = HoldingHand.BOTH,
+    @Help(
+        """
         Cancel the event when triggered.
         It will only cancel the event if all the criteria are met.
         If set to false, it will not modify the event.
-    """)
+    """
+    )
     val cancel: Var<Boolean> = ConstVar(false),
     val interactionType: InteractionType = InteractionType.ALL,
     val shiftType: ShiftType = ShiftType.ANY,
@@ -66,11 +69,23 @@ enum class ShiftType {
 }
 
 enum class InteractionType(vararg val actions: Action) {
-    ALL(Action.RIGHT_CLICK_BLOCK, Action.RIGHT_CLICK_AIR, Action.LEFT_CLICK_BLOCK, Action.LEFT_CLICK_AIR, Action.PHYSICAL),
+    ALL(
+        Action.RIGHT_CLICK_BLOCK,
+        Action.RIGHT_CLICK_AIR,
+        Action.LEFT_CLICK_BLOCK,
+        Action.LEFT_CLICK_AIR,
+        Action.PHYSICAL
+    ),
     CLICK(Action.RIGHT_CLICK_BLOCK, Action.RIGHT_CLICK_AIR, Action.LEFT_CLICK_BLOCK, Action.LEFT_CLICK_AIR),
     RIGHT_CLICK(Action.RIGHT_CLICK_BLOCK, Action.RIGHT_CLICK_AIR),
     LEFT_CLICK(Action.LEFT_CLICK_BLOCK, Action.LEFT_CLICK_AIR),
     PHYSICAL(Action.PHYSICAL),
+}
+
+enum class HoldingHand(val main: Boolean, val off: Boolean) {
+    BOTH(true, true),
+    MAIN(true, false),
+    OFF(false, true),
 }
 
 enum class InteractBlockContextKeys(override val klass: KClass<*>) : EntryContextKey {
@@ -78,12 +93,10 @@ enum class InteractBlockContextKeys(override val klass: KClass<*>) : EntryContex
     POSITION(Position::class),
 }
 
-fun hasItemInHand(player: Player, item: Item): Boolean {
-    return item.isSameAs(player, player.inventory.itemInMainHand, context()) || item.isSameAs(
-        player,
-        player.inventory.itemInOffHand,
-        context(),
-    )
+fun hasItemInHand(player: Player, hand: HoldingHand, item: Item): Boolean {
+    if (hand.main && item.isSameAs(player, player.inventory.itemInMainHand, context())) return true
+    if (hand.off && item.isSameAs(player, player.inventory.itemInOffHand, context())) return true
+    return false
 }
 
 @EntryListener(InteractBlockEventEntry::class)
@@ -106,7 +119,7 @@ fun onInteractBlock(event: PlayerInteractEvent, query: Query<InteractBlockEventE
                 .orElse(true)) return@findWhere false
 
         // Check if the player is holding the correct item
-        if (!hasItemInHand(player, entry.itemInHand.get(player))) return@findWhere false
+        if (!hasItemInHand(player, entry.hand, entry.itemInHand.get(player))) return@findWhere false
 
         entry.block == (block?.type ?: Material.AIR)
     }.toList()

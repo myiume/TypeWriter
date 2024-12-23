@@ -13,7 +13,6 @@ import com.typewritermc.engine.paper.entry.entries.EventEntry
 import com.typewritermc.engine.paper.entry.entries.Var
 import com.typewritermc.engine.paper.entry.triggerAllFor
 import com.typewritermc.engine.paper.utils.item.Item
-import org.bukkit.entity.Player
 import org.bukkit.event.player.PlayerFishEvent
 
 @Entry("on_fish", "When the a player caught a fish or an item", Colors.YELLOW, "mdi:fish")
@@ -29,6 +28,8 @@ class FishEventEntry(
     override val triggers: List<Ref<TriggerableEntry>> = emptyList(),
     @Help("The item the player must be holding when the fish or item is caught.")
     val itemInHand: Var<Item> = ConstVar(Item.Empty),
+    @Help("The hand the player must be holding the item in")
+    val hand: HoldingHand = HoldingHand.BOTH,
     val caught: Var<Item> = ConstVar(Item.Empty),
 ) : EventEntry
 
@@ -39,7 +40,7 @@ fun onPlayerFish(event: PlayerFishEvent, query: Query<FishEventEntry>) {
 
     query.findWhere { entry ->
         // Check if the player is holding the correct item
-        if (!hasItemInHand(player, entry.itemInHand.get(player))) return@findWhere false
+        if (!hasItemInHand(player, entry.hand, entry.itemInHand.get(player))) return@findWhere false
 
         // Check if the player caught the correct item
         val caughtItem = event.caught as? org.bukkit.entity.Item ?: return@findWhere false

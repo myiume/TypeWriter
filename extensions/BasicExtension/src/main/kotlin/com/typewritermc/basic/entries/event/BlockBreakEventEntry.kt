@@ -1,5 +1,3 @@
-@file:JvmName("Some")
-
 package com.typewritermc.basic.entries.event
 
 import com.typewritermc.core.books.pages.Colors
@@ -7,7 +5,6 @@ import com.typewritermc.core.entries.Query
 import com.typewritermc.core.entries.Ref
 import com.typewritermc.core.extension.annotations.*
 import com.typewritermc.core.interaction.EntryContextKey
-import com.typewritermc.core.interaction.context
 import com.typewritermc.core.utils.point.Position
 import com.typewritermc.core.utils.point.toBlockPosition
 import com.typewritermc.engine.paper.entry.TriggerableEntry
@@ -18,7 +15,6 @@ import com.typewritermc.engine.paper.entry.startDialogueWithOrNextDialogue
 import com.typewritermc.engine.paper.utils.item.Item
 import com.typewritermc.engine.paper.utils.toPosition
 import org.bukkit.Material
-import org.bukkit.entity.Player
 import org.bukkit.event.block.BlockBreakEvent
 import java.util.*
 import kotlin.reflect.KClass
@@ -41,6 +37,16 @@ class BlockBreakEventEntry(
     val location: Optional<Var<Position>> = Optional.empty(),
     @Help("The item the player must be holding when the block is broken.")
     val itemInHand: Var<Item> = ConstVar(Item.Empty),
+    @Help("The hand the player must be holding the item in")
+    val hand: HoldingHand = HoldingHand.BOTH,
+    @Help(
+        """
+        Cancel the event when triggered.
+        It will only cancel the event if all the criteria are met.
+        If set to false, it will not modify the event.
+        """
+    )
+    val cancel: Var<Boolean> = ConstVar(false),
 ) : EventEntry
 
 enum class BlockBreakContextKeys(override val klass: KClass<*>) : EntryContextKey {
@@ -58,18 +64,20 @@ enum class BlockBreakContextKeys(override val klass: KClass<*>) : EntryContextKe
 fun onBlockBreak(event: BlockBreakEvent, query: Query<BlockBreakEventEntry>) {
     val player = event.player
     val position = event.block.location.toPosition()
-    query.findWhere { entry ->
+    val entries = query.findWhere { entry ->
         // Check if the player clicked on the correct location
         if (!entry.location.map { it.get(player) == position }.orElse(true)) return@findWhere false
 
         // Check if the player is holding the correct item
-        if (!hasItemInHand(player, entry.itemInHand.get(player))) return@findWhere false
+        if (!hasItemInHand(player, entry.hand, entry.itemInHand.get(player))) return@findWhere false
 
         // Check if block type is correct
         entry.block.map { it == event.block.type }.orElse(true)
-    }.startDialogueWithOrNextDialogue(player) {
+    }.toList()
+    entries.startDialogueWithOrNextDialogue(player) {
         BlockBreakContextKeys.TYPE to event.block.type
         BlockBreakContextKeys.BLOCK_POSITION to position.toBlockPosition()
         BlockBreakContextKeys.CENTER_POSITION to position.mid()
     }
+    if (entries.any { it.cancel.get(player) }) event.isCancelled = true
 }

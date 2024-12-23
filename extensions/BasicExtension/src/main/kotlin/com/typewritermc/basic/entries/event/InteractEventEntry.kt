@@ -26,6 +26,8 @@ class InteractEventEntry(
     val location: Optional<Var<Position>> = Optional.empty(),
     @Help("The item the player must be holding when the block is interacted with.")
     val itemInHand: Var<Item> = ConstVar(Item.Empty),
+    @Help("The hand the player must be holding the item in")
+    val hand: HoldingHand = HoldingHand.BOTH,
     @Help(
         """
         Cancel the event when triggered.
@@ -58,7 +60,7 @@ fun onInteract(event: PlayerInteractEvent, query: Query<InteractEventEntry>) {
                 .orElse(true)) return@findWhere false
 
         // Check if the player is holding the correct item
-        if (!hasItemInHand(player, entry.itemInHand.get(player))) return@findWhere false
+        if (!hasItemInHand(player, entry.hand, entry.itemInHand.get(player))) return@findWhere false
 
         true
     }.toList()
