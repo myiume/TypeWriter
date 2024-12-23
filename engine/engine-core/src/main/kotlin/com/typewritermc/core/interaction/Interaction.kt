@@ -78,6 +78,12 @@ class InteractionContextBuilder {
         put(this, value)
     }
 
+    operator fun <T : Any> Ref<out Entry>.set(key: EntryContextKey, value: T) {
+        put(EntryInteractionContextKey<T>(this, key), value)
+    }
+
+    operator fun <T : Any> Entry.set(key: EntryContextKey, value: T) = ref().set(key, value)
+
     fun build(): InteractionContext {
         return InteractionContext(data)
     }

@@ -40,6 +40,7 @@ fun onEvent(event: SomeBukkitEvent, query: Query<ExampleEventEntry>) {
 //<code-block:event_entry_with_context_keys>
 @Entry("example_event_with_context_keys", "An example event entry with context keys.", Colors.YELLOW, "material-symbols:bigtop-updates")
 // This tells Typewriter that this entry exposes some context
+// highlight-next-line
 @ContextKeys(ExampleContextKeys::class)
 class ExampleEventEntryWithContextKeys(
     override val id: String = "",
@@ -47,6 +48,7 @@ class ExampleEventEntryWithContextKeys(
     override val triggers: List<Ref<TriggerableEntry>> = emptyList(),
 ) : EventEntry
 
+// highlight-start
 enum class ExampleContextKeys(override val klass: KClass<*>) : EntryContextKey {
     // The two `String::class` have to be the same.
     // The @KeyType is for the panel to know
@@ -61,10 +63,12 @@ enum class ExampleContextKeys(override val klass: KClass<*>) : EntryContextKey {
     @KeyType(Position::class)
     POSITION(Position::class)
 }
+// highlight-end
 
 @EntryListener(ExampleEventEntryWithContextKeys::class)
 fun onEventAddContext(event: SomeBukkitEvent, query: Query<ExampleEventEntryWithContextKeys>) {
     val entries = query.find()
+    // highlight-start
     entries.triggerAllFor(event.player) {
         // Make sure these values are drawn from the event.
         // You MUST supply all the context keys.
@@ -72,6 +76,7 @@ fun onEventAddContext(event: SomeBukkitEvent, query: Query<ExampleEventEntryWith
         ExampleContextKeys.NUMBER withValue 42
         ExampleContextKeys.POSITION withValue Position.ORIGIN
     }
+    // highlight-end
 }
 //</code-block:event_entry_with_context_keys>
 
