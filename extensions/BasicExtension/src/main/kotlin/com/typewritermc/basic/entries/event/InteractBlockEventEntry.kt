@@ -46,7 +46,7 @@ class InteractBlockEventEntry(
         It will only cancel the event if all the criteria are met.
         If set to false, it will not modify the event.
     """)
-    val cancel: Boolean = false,
+    val cancel: Var<Boolean> = ConstVar(false),
     val interactionType: InteractionType = InteractionType.ALL,
     val shiftType: ShiftType = ShiftType.ANY,
 ) : EventEntry
@@ -115,5 +115,5 @@ fun onInteractBlock(event: PlayerInteractEvent, query: Query<InteractBlockEventE
     entries.startDialogueWithOrNextDialogue(player) {
         InteractBlockContextKeys.POSITION to location.toPosition()
     }
-    if (entries.any { it.cancel }) event.isCancelled = true
+    if (entries.any { it.cancel.get(player) }) event.isCancelled = true
 }

@@ -13,6 +13,8 @@ import kotlin.text.Regex as KotlinRegex
 import com.typewritermc.core.entries.Query
 import com.typewritermc.core.extension.annotations.EntryListener
 import com.typewritermc.core.interaction.context
+import com.typewritermc.engine.paper.entry.entries.ConstVar
+import com.typewritermc.engine.paper.entry.entries.Var
 
 @Entry("on_detect_command_ran", "When a player runs an existing command", Colors.YELLOW, "mdi:account-eye")
 /**
@@ -59,7 +61,7 @@ class DetectCommandRanEventEntry(
      * </Admonition>
      */
     @Help("Cancel the event when triggered")
-    val cancel: Boolean = false,
+    val cancel: Var<Boolean> = ConstVar(false),
 ) : EventEntry
 
 @EntryListener(DetectCommandRanEventEntry::class)
@@ -69,5 +71,5 @@ fun onRunCommand(event: PlayerCommandPreprocessEvent, query: Query<DetectCommand
     val entries = query.findWhere { KotlinRegex(it.command).matches(message) }.toList()
     if (entries.isEmpty()) return
     entries.triggerAllFor(event.player, context())
-    if (entries.any { it.cancel }) event.isCancelled = true
+    if (entries.any { it.cancel.get(event.player) }) event.isCancelled = true
 }

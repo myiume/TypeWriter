@@ -26,15 +26,17 @@ class InteractEventEntry(
     val location: Optional<Var<Position>> = Optional.empty(),
     @Help("The item the player must be holding when the block is interacted with.")
     val itemInHand: Var<Item> = ConstVar(Item.Empty),
-    @Help("""
+    @Help(
+        """
         Cancel the event when triggered.
         It will only cancel the event if all the criteria are met.
         If set to false, it will not modify the event.
-    """)
-    val cancel: Boolean = false,
+    """
+    )
+    val cancel: Var<Boolean> = ConstVar(false),
     val interactionType: InteractionType = InteractionType.ALL,
     val shiftType: ShiftType = ShiftType.ANY,
-): EventEntry
+) : EventEntry
 
 @EntryListener(InteractEventEntry::class)
 fun onInteract(event: PlayerInteractEvent, query: Query<InteractEventEntry>) {
@@ -62,5 +64,5 @@ fun onInteract(event: PlayerInteractEvent, query: Query<InteractEventEntry>) {
     }.toList()
     if (entries.isEmpty()) return
     entries.triggerAllFor(player, context())
-    if (entries.any { it.cancel }) event.isCancelled = true
+    if (entries.any { it.cancel.get(player) }) event.isCancelled = true
 }
