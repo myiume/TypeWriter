@@ -2,6 +2,7 @@ package com.typewritermc.quest
 
 import com.typewritermc.core.entries.Query
 import com.typewritermc.core.entries.Ref
+import com.typewritermc.core.entries.priority
 import com.typewritermc.core.entries.ref
 import com.typewritermc.core.extension.annotations.Factory
 import com.typewritermc.core.extension.annotations.Parameter
@@ -47,7 +48,9 @@ class QuestTracker(
         )
     }
 
-    override fun tick() {}
+    override fun tick() {
+        Query.find<QuestEntry>().forEach { refresh(it.ref()) }
+    }
 
     override fun teardown() {
         factWatchSubscription?.cancel(player)
@@ -63,13 +66,18 @@ class QuestTracker(
         if (oldStatus == status) return
 
         if (oldStatus != QuestStatus.ACTIVE && status == QuestStatus.ACTIVE) {
+            // We always want to track the quest if it becomes active
+            // Even if the previous quest priority was higher
+            // Because this is responding to the player's action more accurately
             trackQuest(ref)
-        } else if (trackedQuest == ref) {
-            unTrackQuest()
         }
 
         DISPATCHERS_ASYNC.launch {
             AsyncQuestStatusUpdate(player, ref, oldStatus, status).callEvent()
+
+            if (trackedQuest == ref && status == QuestStatus.COMPLETED) {
+                unTrackQuest()
+            }
         }
     }
 
