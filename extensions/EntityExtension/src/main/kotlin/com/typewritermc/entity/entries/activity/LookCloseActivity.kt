@@ -36,12 +36,13 @@ class LookCloseActivityEntry(
 }
 
 class LookCloseActivity(
-    override var currentPosition: PositionProperty,
+    private val startPosition: PositionProperty,
 ) : EntityActivity<ActivityContext> {
     private var target: Target? = null
     private val yawVelocity = Velocity(0f)
     private val pitchVelocity = Velocity(0f)
 
+    override var currentPosition: PositionProperty = startPosition
 
     override fun initialize(context: ActivityContext) {}
 
@@ -71,7 +72,23 @@ class LookCloseActivity(
 
         var target = target
         if (target == null) target = findNewTarget(context)
-        if (target == null) return TickResult.IGNORED
+        if (target == null) {
+            // We want to rotate back to the start position, so the npc doesn't look at a wall or something like that.
+            val targetYaw = startPosition.yaw
+            val targetPitch = startPosition.pitch
+
+            val (yaw, pitch) = updateLookDirection(
+                LookDirection(currentPosition.yaw, currentPosition.pitch),
+                LookDirection(targetYaw, targetPitch),
+                yawVelocity,
+                pitchVelocity
+            )
+
+            currentPosition =
+                PositionProperty(currentPosition.world, currentPosition.x, currentPosition.y, currentPosition.z, yaw, pitch)
+
+            return TickResult.IGNORED
+        }
 
         this.target = target
 
