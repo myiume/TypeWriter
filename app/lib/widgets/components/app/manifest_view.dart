@@ -80,6 +80,7 @@ Graph manifestGraph(Ref ref) {
       final referenceTags = ref.watch(entryTagsProvider(referenceEntryId));
       // We only want to show references to manifest entries.
       if (!referenceTags.contains("manifest")) continue;
+      if (referenceEntryId == entry.id) continue;
 
       graph.addEdge(
         Node.Id(entry.id),

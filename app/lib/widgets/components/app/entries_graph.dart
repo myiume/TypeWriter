@@ -94,6 +94,7 @@ Graph graph(Ref ref) {
         Colors.grey;
 
     for (final triggeredEntryId in triggeredEntryIds) {
+      if (triggeredEntryId == entry.id) continue;
       graph.addEdge(
         Node.Id(entry.id),
         Node.Id(triggeredEntryId),
