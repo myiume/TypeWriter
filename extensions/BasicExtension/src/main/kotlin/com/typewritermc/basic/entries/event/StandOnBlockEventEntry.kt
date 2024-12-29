@@ -70,7 +70,8 @@ fun blockLocation(location: Location, block: Material): Location? {
     if (loc.block.type == block) return location
     loc.add(0.0, 1.0, 0.0)
     if (loc.block.type == block) return loc
-    loc.add(0.0, -1.0, 0.0)
+    // We want the block below the player, as we are now at the head of the player, 2 down
+    loc.add(0.0, -2.0, 0.0)
     if (loc.block.type == block) return loc
     return null
 }
