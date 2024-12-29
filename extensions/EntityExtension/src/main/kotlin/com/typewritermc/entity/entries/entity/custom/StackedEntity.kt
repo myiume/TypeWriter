@@ -52,10 +52,7 @@ class StackedEntity(
 
     override fun applyProperties(properties: List<EntityProperty>) {
         if (entities.isEmpty()) return
-        val otherProperties = properties.filter { it !is PositionProperty }
-        // Only the bottom entity will have the location
-        entities.first().consumeProperties(properties)
-        entities.asSequence().drop(1).forEach { it.consumeProperties(otherProperties) }
+        entities.asSequence().forEach { it.consumeProperties(properties) }
     }
 
     override fun spawn(location: PositionProperty) {
