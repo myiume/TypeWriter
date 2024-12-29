@@ -37,13 +37,13 @@ import org.bukkit.inventory.ItemStack
 
 val roadNetworkMaxDistance by snippet("road_network.distance.max", 30.0)
 
-@Tags("road-network")
+@Tags("road_network")
 interface RoadNetworkEntry : ArtifactEntry {
     suspend fun loadRoadNetwork(gson: Gson): RoadNetwork
     suspend fun saveRoadNetwork(gson: Gson, network: RoadNetwork)
 }
 
-@Tags("road-network-node")
+@Tags("road_network_node")
 interface RoadNodeEntry : Entry {
     val roadNetwork: Ref<RoadNetworkEntry>
 
@@ -51,7 +51,7 @@ interface RoadNodeEntry : Entry {
     val nodeId: RoadNodeId
 }
 
-@Tags("road-network-node-collection")
+@Tags("road_network_node_collection")
 interface RoadNodeCollectionEntry : Entry {
     val roadNetwork: Ref<RoadNetworkEntry>
 
