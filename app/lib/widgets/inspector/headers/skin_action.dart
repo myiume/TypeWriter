@@ -4,11 +4,14 @@ import "package:flutter/material.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:http/http.dart" as http;
+import "package:ktx/collections.dart";
 import "package:typewriter/models/entry_blueprint.dart";
+import "package:typewriter/utils/extensions.dart";
 import "package:typewriter/utils/icons.dart";
 import "package:typewriter/utils/passing_reference.dart";
 import "package:typewriter/widgets/components/app/header_button.dart";
 import "package:typewriter/widgets/components/general/admonition.dart";
+import "package:typewriter/widgets/components/general/dropdown.dart";
 import "package:typewriter/widgets/components/general/formatted_text_field.dart";
 import "package:typewriter/widgets/components/general/iconify.dart";
 import "package:typewriter/widgets/components/general/loading_button.dart";
@@ -56,13 +59,12 @@ class SkinFetchFromUUIDHeaderAction extends HookConsumerWidget {
     return HeaderButton(
       tooltip: "Fetch From UUID",
       icon: TWIcons.accountTag,
-      color: Colors.green,
+      color: Colors.orange,
       onTap: () => showDialog(
         context: context,
         builder: (context) => _FetchFromMineSkinDialogue(
           path: path,
-          url: "https://api.mineskin.org/generate/user",
-          bodyKey: "uuid",
+          bodyKey: "user",
           icon: TWIcons.accountTag,
         ),
       ),
@@ -111,12 +113,11 @@ class SkinFetchFromURLHeaderAction extends HookConsumerWidget {
     return HeaderButton(
       tooltip: "Fetch From URL",
       icon: TWIcons.url,
-      color: Colors.orange,
+      color: Colors.blue,
       onTap: () => showDialog(
         context: context,
         builder: (context) => _FetchFromMineSkinDialogue(
           path: path,
-          url: "https://api.mineskin.org/generate/url",
           bodyKey: "url",
           icon: TWIcons.url,
         ),
@@ -125,16 +126,20 @@ class SkinFetchFromURLHeaderAction extends HookConsumerWidget {
   }
 }
 
+enum SkinVariant {
+  classic,
+  slim,
+  unknown,
+}
+
 class _FetchFromMineSkinDialogue extends HookConsumerWidget {
   const _FetchFromMineSkinDialogue({
     required this.path,
-    required this.url,
     required this.bodyKey,
     required this.icon,
   });
 
   final String path;
-  final String url;
   final String bodyKey;
   final String icon;
 
@@ -143,6 +148,7 @@ class _FetchFromMineSkinDialogue extends HookConsumerWidget {
     final controller = useTextEditingController();
     final focus = useFocusNode();
     final error = useState<String?>(null);
+    final selectedVariant = useState<SkinVariant>(SkinVariant.unknown);
 
     return AlertDialog(
       title: const Text("Fetch Skin"),
@@ -161,6 +167,18 @@ class _FetchFromMineSkinDialogue extends HookConsumerWidget {
             icon: icon,
             hintText: "Enter the $bodyKey to fetch the skin",
           ),
+          const SizedBox(height: 16),
+          Dropdown<SkinVariant>(
+            value: selectedVariant.value,
+            values: SkinVariant.values,
+            icon: TWIcons.skin,
+            onChanged: (value) {
+              selectedVariant.value = value;
+            },
+            builder: (context, value) {
+              return Text(value.name.formatted);
+            },
+          ),
         ],
       ),
       actions: [
@@ -172,7 +190,11 @@ class _FetchFromMineSkinDialogue extends HookConsumerWidget {
           icon: const Iconify(TWIcons.download),
           onPressed: () async {
             final navigator = Navigator.of(context);
-            final result = await _fetchSkin(ref.passing, controller.text);
+            final result = await _fetchSkin(
+              ref.passing,
+              controller.text,
+              selectedVariant.value,
+            );
             if (result == null) {
               navigator.pop();
               return;
@@ -186,23 +208,40 @@ class _FetchFromMineSkinDialogue extends HookConsumerWidget {
     );
   }
 
-  Future<String?> _fetchSkin(PassingRef ref, String data) async {
-    final body = {
-      "visibility": "1",
-      bodyKey: data,
+  Future<String?> _fetchSkin(
+    PassingRef ref,
+    String data,
+    SkinVariant variant,
+  ) async {
+    final headers = {
+      "User-Agent": "Typewriter/1.0",
+      "Content-Type": "application/json",
     };
-    // Make a post request to the MineSkin API
-    // and update the texture and signature fields
+
+    final body = {
+      "visibility": "public",
+      bodyKey: data,
+      "variant": variant.name,
+    };
+
     final response = await http.post(
-      Uri.parse(url),
-      body: body,
+      Uri.parse("https://api.mineskin.org/v2/generate"),
+      headers: headers,
+      body: jsonEncode(body),
     );
 
     if (response.statusCode != 200) {
-      // Parse the repondse json for the error field and return that
       final data = jsonDecode(response.body);
-      if (data is Map<String, dynamic> && data.containsKey("error")) {
-        return data["error"];
+      if (data is Map<String, dynamic> && data.containsKey("errors")) {
+        final errors = data["errors"];
+        if (errors is List<dynamic> && errors.isNotEmpty) {
+          return errors.mapNotNull((e) {
+            if (e is Map<String, dynamic> && e.containsKey("message")) {
+              return e["message"];
+            }
+            return null;
+          }).join("\n");
+        }
       }
       return "An unknown error occurred";
     }
@@ -212,47 +251,32 @@ class _FetchFromMineSkinDialogue extends HookConsumerWidget {
       return "An unknown error occurred";
     }
 
-    if (!result.containsKey("data")) {
+    if (!result.containsKey("skin")) {
       return "Could not find the skin data in the response";
     }
-    final resultData = result["data"];
 
-    if (resultData is! Map<String, dynamic>) {
-      return "Result data is not a map";
+    final textureObject = result["skin"]["texture"];
+    if (textureObject == null || textureObject is! Map<String, dynamic>) {
+      return "Invalid texture data in response";
     }
 
-    if (!resultData.containsKey("texture")) {
-      return "Could not find the texture in the response";
-    }
-    final textureData = resultData["texture"];
-
-    if (textureData is! Map<String, dynamic>) {
-      return "Texture is not a map";
+    final textureData = textureObject["data"];
+    if (textureData == null || textureData is! Map<String, dynamic>) {
+      return "Invalid texture data in response";
     }
 
-    if (!textureData.containsKey("value")) {
-      return "Could not find the texture value in the response";
-    }
     final texture = textureData["value"];
-
-    if (texture is! String) {
-      return "Texture value is not a string";
-    }
-
-    if (!textureData.containsKey("signature")) {
-      return "Could not find the signature in the response";
-    }
-
     final signature = textureData["signature"];
 
-    if (signature is! String) {
-      return "Signature is not a string";
+    if (texture is! String || signature is! String) {
+      return "Invalid texture or signature in response";
     }
 
     final definition = ref.read(inspectingEntryDefinitionProvider);
     if (definition == null) {
       return "Currently not inspecting an entry";
     }
+
     await definition.updateField(ref, path, {
       "texture": texture,
       "signature": signature,

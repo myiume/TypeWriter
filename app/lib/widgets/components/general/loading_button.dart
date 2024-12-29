@@ -50,6 +50,7 @@ class LoadingButton extends HookWidget {
                 isLoading.value = false;
               }
             },
+      color: color,
       child: IndexedStack(
         index: isLoading.value ? 1 : 0,
         alignment: Alignment.center,
@@ -99,9 +100,9 @@ class _LoadingButtonWithIconChild extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: <Widget>[
         IconTheme(
-          data: IconThemeData(
+          data: const IconThemeData(
             size: 18,
-            color: IconTheme.of(context).color,
+            color: Colors.white,
           ),
           child: icon,
         ),
