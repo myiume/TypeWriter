@@ -89,31 +89,32 @@ class InteractionContextBuilder {
     }
 }
 
-typealias EntryContextBuilder = EntryInteractionContextBuilder.() -> Unit
+typealias EntryContextBuilder<E> = EntryInteractionContextBuilder<E>.() -> Unit
 
 @JvmName("withContextRefs")
-fun List<Ref<out Entry>>.withContext(builder: EntryContextBuilder): InteractionContext {
-    return map { EntryInteractionContextBuilder().apply(builder).build(it) }.fold(context()) { a, b ->
+inline fun <reified E : Entry> List<Ref<E>>.withContext(builder: EntryContextBuilder<E>): InteractionContext {
+    return map { it.withContext(builder) }.fold(context()) { a, b ->
         a.combine(b)
     }
 }
 
 @JvmName("withContextEntries")
-fun List<Entry>.withContext(builder: EntryContextBuilder): InteractionContext {
-    return map { EntryInteractionContextBuilder().apply(builder).build(it) }.fold(context()) { a, b ->
+inline fun <reified E : Entry> List<E>.withContext(builder: EntryContextBuilder<E>): InteractionContext {
+    return map { it.withContext(builder) }.fold(context()) { a, b ->
         a.combine(b)
     }
 }
 
-fun Ref<out Entry>.withContext(builder: EntryContextBuilder): InteractionContext {
-    return EntryInteractionContextBuilder().apply(builder).build(this)
+inline fun <reified E : Entry> Ref<E>.withContext(builder: EntryContextBuilder<E>): InteractionContext {
+    val entry = get() ?: return context()
+    return EntryInteractionContextBuilder(this, entry).apply(builder).build()
 }
 
-fun Entry.withContext(builder: EntryContextBuilder): InteractionContext {
-    return ref().withContext(builder)
+inline fun <reified E : Entry> E.withContext(builder: EntryContextBuilder<E>): InteractionContext {
+    return EntryInteractionContextBuilder(ref(), this).apply(builder).build()
 }
 
-class EntryInteractionContextBuilder {
+class EntryInteractionContextBuilder<E : Entry>(val ref: Ref<E>, val entry: E) {
     private val data = mutableMapOf<EntryContextKey, Any>()
 
     fun <T : Any> put(key: EntryContextKey, value: T) {
@@ -124,9 +125,11 @@ class EntryInteractionContextBuilder {
         put(this, value)
     }
 
-    fun build(entry: Entry): InteractionContext = build(entry.ref())
+    operator fun <T : Any> EntryContextKey.plusAssign(value: T) {
+        put(this, value)
+    }
 
-    fun build(ref: Ref<out Entry>): InteractionContext {
+    fun build(): InteractionContext {
         return InteractionContext(data.mapKeys { (key, _) -> EntryInteractionContextKey<Any>(ref, key) })
     }
 }

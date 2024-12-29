@@ -94,27 +94,25 @@ fun onStandOnBlock(event: PlayerMoveEvent, query: Query<StandOnBlockEventEntry>)
         true
     }.toList()
 
-    entries.triggerAllFor(event.player, context {
-        entries.forEach { entry ->
-            entry[StandOnBlockContextKeys.PLAYER_POSITION] = to.toPosition()
+    entries.triggerAllFor(event.player) {
+        StandOnBlockContextKeys.PLAYER_POSITION += to.toPosition()
 
-            val blockType = entry.block.getOrNull()?.get(player, context())
-            if (blockType != null) {
-                entry[StandOnBlockContextKeys.BLOCK_MATERIAL] = blockType
-                entry[StandOnBlockContextKeys.BLOCK_POSITION] = blockLocation(
-                    to,
-                    blockType
-                )?.toPosition()?.toBlockPosition() ?: to.toPosition().toBlockPosition()
-            } else if (to.block.type != Material.AIR) {
-                entry[StandOnBlockContextKeys.BLOCK_MATERIAL] = to.block.type
-                entry[StandOnBlockContextKeys.BLOCK_POSITION] = to.toPosition().toBlockPosition()
-            } else {
-                val blockBelow = to.clone().add(0.0, -1.0, 0.0)
-                entry[StandOnBlockContextKeys.BLOCK_MATERIAL] = blockBelow.block.type
-                entry[StandOnBlockContextKeys.BLOCK_POSITION] = blockBelow.toPosition().toBlockPosition()
-            }
+        val blockType = entry.block.getOrNull()?.get(player, context())
+        if (blockType != null) {
+            StandOnBlockContextKeys.BLOCK_MATERIAL += blockType
+            StandOnBlockContextKeys.BLOCK_POSITION += blockLocation(
+                to,
+                blockType
+            )?.toPosition()?.toBlockPosition() ?: to.toPosition().toBlockPosition()
+        } else if (to.block.type != Material.AIR) {
+            StandOnBlockContextKeys.BLOCK_MATERIAL += to.block.type
+            StandOnBlockContextKeys.BLOCK_POSITION += to.toPosition().toBlockPosition()
+        } else {
+            val blockBelow = to.clone().add(0.0, -1.0, 0.0)
+            StandOnBlockContextKeys.BLOCK_MATERIAL += blockBelow.block.type
+            StandOnBlockContextKeys.BLOCK_POSITION += blockBelow.toPosition().toBlockPosition()
         }
-    })
+    }
 
     if (entries.any { it.cancel.get(player) }) event.isCancelled = true
 }

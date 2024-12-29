@@ -70,7 +70,7 @@ fun <E : TriggerEntry> List<E>.triggerAllFor(player: Player, context: Interactio
  * @param player The player to trigger the triggers for.
  * @param builder The entry context builder to build the context with.
  */
-fun <E : TriggerEntry> List<E>.triggerAllFor(player: Player, builder: EntryContextBuilder) {
+inline fun <reified E : TriggerEntry> List<E>.triggerAllFor(player: Player, builder: EntryContextBuilder<E>) {
     val triggers = this.flatMap { it.eventTriggers }
     if (triggers.isEmpty()) return
     get<PlayerSessionManager>(PlayerSessionManager::class.java).triggerActions(player, this.withContext(builder), triggers)
@@ -107,7 +107,7 @@ fun <E : TriggerEntry> Sequence<E>.triggerAllFor(player: Player, context: Intera
  * @param player The player to trigger the triggers for.
  * @param builder The entry context builder to build the context with.
  */
-fun <E : TriggerEntry> Sequence<E>.triggerAllFor(player: Player, builder: EntryContextBuilder) {
+inline fun <reified E : TriggerEntry> Sequence<E>.triggerAllFor(player: Player, builder: EntryContextBuilder<E>) {
     val entries = toList()
     val triggers = entries.flatMap { it.eventTriggers }
     if (triggers.isEmpty()) return
@@ -145,7 +145,7 @@ fun <E : TriggerEntry> E.triggerAllFor(player: Player, context: InteractionConte
  * @param player The player to trigger the triggers for.
  * @param builder The entry context builder to build the context with.
  */
-fun <E : TriggerEntry> E.triggerAllFor(player: Player, builder: EntryContextBuilder) {
+inline fun <reified E : TriggerEntry> E.triggerAllFor(player: Player, builder: EntryContextBuilder<E>) {
     val triggers = this.eventTriggers
     if (triggers.isEmpty()) return
     get<PlayerSessionManager>(PlayerSessionManager::class.java).triggerActions(player, this.withContext(builder), triggers)
@@ -184,7 +184,7 @@ fun List<Ref<out TriggerableEntry>>.triggerEntriesFor(player: Player, context: I
  * @param player The player to trigger the triggers for.
  * @param builder The entry context builder to build the context with.
  */
-fun List<Ref<out TriggerableEntry>>.triggerEntriesFor(player: Player, builder: EntryContextBuilder) {
+inline fun <reified E : TriggerableEntry> List<Ref<E>>.triggerEntriesFor(player: Player, builder: EntryContextBuilder<E>) {
     val triggers = this.map { EntryTrigger(it) }
     if (triggers.isEmpty()) return
     get<PlayerSessionManager>(PlayerSessionManager::class.java).triggerActions(player, this.withContext(builder), triggers)
@@ -223,7 +223,7 @@ fun Sequence<Ref<out TriggerableEntry>>.triggerEntriesFor(player: Player, contex
  * @param player The player to trigger the triggers for.
  * @param builder The entry context builder to build the context with.
  */
-fun Sequence<Ref<out TriggerableEntry>>.triggerEntriesFor(player: Player, builder: EntryContextBuilder) {
+inline fun <reified E : TriggerableEntry> Sequence<Ref<E>>.triggerEntriesFor(player: Player, builder: EntryContextBuilder<E>) {
     val entries = toList()
     val triggers = entries.map { EntryTrigger(it) }
     if (triggers.isEmpty()) return
@@ -260,7 +260,7 @@ fun Ref<out TriggerableEntry>.triggerFor(player: Player, context: InteractionCon
  *
  * @param player The player to trigger the trigger for.
  */
-fun Ref<out TriggerableEntry>.triggerFor(player: Player, builder: EntryContextBuilder) {
+inline fun <reified E : TriggerableEntry> Ref<E>.triggerFor(player: Player, builder: EntryContextBuilder<E>) {
     EntryTrigger(this).triggerFor(player, this.withContext(builder))
 }
 
@@ -410,7 +410,7 @@ fun <E : TriggerEntry> List<E>.startDialogueWithOrNextDialogue(player: Player, c
  * }
  * ```
  */
-fun <E : TriggerEntry> List<E>.startDialogueWithOrNextDialogue(player: Player, builder: EntryContextBuilder) =
+inline fun <reified E : TriggerEntry> List<E>.startDialogueWithOrNextDialogue(player: Player, builder: EntryContextBuilder<E>) =
     startDialogueWithOrTrigger(player, DialogueTrigger.NEXT_OR_COMPLETE, this.withContext(builder))
 
 
@@ -450,7 +450,7 @@ fun <E : TriggerEntry> Sequence<E>.startDialogueWithOrNextDialogue(player: Playe
  * }
  * ```
  */
-fun <E : TriggerEntry> Sequence<E>.startDialogueWithOrNextDialogue(player: Player, builder: EntryContextBuilder) {
+inline fun <reified E : TriggerEntry> Sequence<E>.startDialogueWithOrNextDialogue(player: Player, builder: EntryContextBuilder<E>) {
     val entries = toList()
     entries.startDialogueWithOrTrigger(player, DialogueTrigger.NEXT_OR_COMPLETE, entries.withContext(builder))
 }
