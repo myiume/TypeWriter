@@ -14,6 +14,15 @@ import kotlin.reflect.safeCast
 
 @Entry("interaction_context_variable", "Fill in a field with some data from another entry", Colors.GREEN, "uil:capture")
 @VariableData(InteractionContextVariableData::class)
+/**
+ * The `Interaction Context Variable` entry is a variable
+ * that fills in a field with some data from another entry in the same interaction.
+ *
+ * This is useful to use data from another entry which got executed in the same interaction.
+ *
+ * ## How could this be used?
+ * This could be used to spawn firework on the block the player clicked on.
+ */
 class InteractionContextVariable(
     override val id: String = "",
     override val name: String = "",
