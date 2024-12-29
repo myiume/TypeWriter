@@ -60,6 +60,10 @@ class PacketInterceptor : PacketListenerAbstract() {
         }
     }
 
+    fun unload() {
+        blockers.clear()
+    }
+
     fun shutdown() {
         PacketEvents.getAPI().eventManager.unregisterListener(this)
         blockers.clear()

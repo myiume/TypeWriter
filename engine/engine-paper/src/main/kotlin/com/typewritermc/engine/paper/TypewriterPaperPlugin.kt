@@ -189,6 +189,7 @@ class TypewriterPaperPlugin : KotlinPlugin(), KoinComponent {
             CommandAPI.unregister("typewriter")
 
         CustomCommandEntry.unregisterAll()
+        get<PacketInterceptor>().unload()
         get<AudienceManager>().unload()
         get<EntryListeners>().unload()
         get<PlayerSessionManager>().unload()
