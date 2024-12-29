@@ -67,9 +67,9 @@ class ShowTitleActionEntry(
 
 data class TitleDurations(
     @Help("The duration of the fade in effect.")
-    val fadeIn: Duration = Duration.ZERO,
+    val fadeIn: Duration = Duration.ofSeconds(1),
     @Help("The duration that it stays.")
-    val stay: Duration = Duration.ZERO,
+    val stay: Duration = Duration.ofSeconds(1),
     @Help("The duration of the fade out effect.")
-    val fadeOut: Duration = Duration.ZERO,
+    val fadeOut: Duration = Duration.ofSeconds(1),
 )
