@@ -258,6 +258,7 @@ abstract class PlayerSingleDisplay<E : AudienceFilterEntry>(
 
     fun onAddedBy(ref: Ref<E>): Boolean {
         if (current.priority > ref.priority) return false
+        if (ref == current) return false
         tearDown()
         current = ref
         setup()
