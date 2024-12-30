@@ -35,6 +35,8 @@ class PositionProperty(
 
     override fun withPitch(pitch: Float) = copy(pitch = pitch)
 
+    override fun withWorld(world: World) = copy(world = world)
+
     override fun add(x: Double, y: Double, z: Double): PositionProperty {
         return copy(x = this.x + x, y = this.y + y, z = this.z + z)
     }

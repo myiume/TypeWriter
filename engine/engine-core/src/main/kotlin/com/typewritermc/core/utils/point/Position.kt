@@ -34,6 +34,8 @@ open class Position(
 
     override fun rotate(yaw: Float, pitch: Float): Position = copy(yaw = this.yaw + yaw, pitch = this.pitch + pitch)
 
+    open fun withWorld(world: World): Position = copy(world = world)
+
     override fun add(x: Double, y: Double, z: Double): Position {
         return copy(x = this.x + x, y = this.y + y, z = this.z + z)
     }
