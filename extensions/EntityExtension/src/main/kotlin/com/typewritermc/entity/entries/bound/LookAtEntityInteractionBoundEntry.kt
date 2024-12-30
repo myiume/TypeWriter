@@ -15,6 +15,7 @@ import com.typewritermc.engine.paper.entry.entries.EntityInstanceEntry
 import com.typewritermc.engine.paper.interaction.ListenerInteractionBound
 import com.typewritermc.engine.paper.interaction.interactionContext
 import com.typewritermc.engine.paper.plugin
+import com.typewritermc.engine.paper.snippets.snippet
 import com.typewritermc.engine.paper.utils.distanceSqrt
 import com.typewritermc.engine.paper.utils.toPosition
 import com.typewritermc.entity.entries.activity.*
@@ -32,6 +33,8 @@ import java.time.Duration
 import java.time.Instant
 import kotlin.math.abs
 
+
+private val lookBackDelay: Int by snippet("look_at_entity_interaction_bound.look_back_delay", 500, "The duration in Milliseconds the player can move their head before the bound forces them to look at teh entity.")
 
 @Entry(
     "look_at_entity_interaction_bound",
@@ -184,7 +187,7 @@ private sealed interface AnimationState {
     }
 
     data class Moved(val lastMove: Instant) : AnimationState {
-        fun canAnimate(): Boolean = Duration.between(lastMove, Instant.now()).toMillis() > 500
+        fun canAnimate(): Boolean = Duration.between(lastMove, Instant.now()).toMillis() > lookBackDelay
         override fun transition(): AnimationState = if (canAnimate()) Animating else this
     }
 
