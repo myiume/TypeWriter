@@ -88,8 +88,6 @@ class DisplayDialogueCinematicAction(
     override suspend fun setup() {
         super.setup()
         state = player.state(EXP, LEVEL)
-        player.exp = 0f
-        player.level = 0
         setup?.invoke(player)
     }
 
@@ -109,6 +107,7 @@ class DisplayDialogueCinematicAction(
         }
 
         if (previousSegment != segment) {
+            player.level = 0
             player.exp = 1f
             player.playSpeakerSound(speaker)
             previousSegment = segment
@@ -116,6 +115,7 @@ class DisplayDialogueCinematicAction(
         }
 
         val percentage = segment percentageAt frame
+        player.level = 0
         player.exp = 1 - percentage.toFloat()
 
         // The percentage of the dialogue that should be displayed.
