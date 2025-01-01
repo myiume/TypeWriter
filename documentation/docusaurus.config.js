@@ -149,6 +149,10 @@ const config = {
                             {
                                 label: 'Clickup',
                                 href: 'https://sharing.clickup.com/9015308602/l/h/6-901502296591-1/e32ea9f33a22632',
+                            },
+                            {
+                                label: 'Privacy Policy',
+                                to: '/privacy-policy',
                             }
 
                         ],
