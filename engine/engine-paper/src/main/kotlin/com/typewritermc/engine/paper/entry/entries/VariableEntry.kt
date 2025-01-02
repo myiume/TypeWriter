@@ -54,6 +54,10 @@ fun <T : Any> Var<T>.get(player: Player?, interactionContext: InteractionContext
 
 class ConstVar<T : Any>(val value: T) : Var<T> {
     override fun get(player: Player, interactionContext: InteractionContext?): T = value
+
+    override fun toString(): String {
+        return "ConstVar($value)"
+    }
 }
 
 class BackedVar<T : Any>(
@@ -65,6 +69,10 @@ class BackedVar<T : Any>(
         val entry = ref.get() ?: throw IllegalStateException("Could not find variable entry, $ref")
         return entry.get(VarContext(player, data, klass, interactionContext))
     }
+
+    override fun toString(): String {
+        return "BackedVar(ref=$ref, data=$data, klass=$klass)"
+    }
 }
 
 class MappedVar<T : Any>(
@@ -73,6 +81,9 @@ class MappedVar<T : Any>(
 ) : Var<T> {
     override fun get(player: Player, interactionContext: InteractionContext?): T {
         return mapper(player, variable.get(player, interactionContext))
+    }
+    override fun toString(): String {
+        return "MappedVar(variable=$variable, mapper=$mapper)"
     }
 }
 
