@@ -61,6 +61,7 @@ class CommunicationHandler : KoinComponent {
     )
     private val websocketHostname: String? by optionalConfig("websocket.hostname")
     private val websocketAppendPort: Boolean? by optionalConfig("websocket.append_port")
+    private val websocketSecure: Boolean? by optionalConfig("websocket.secure")
 
 
     val authenticationEnabled: Boolean
@@ -188,6 +189,7 @@ class CommunicationHandler : KoinComponent {
         url += "/#/connect?host=${websocketHostname ?: hostName}"
         if (websocketAppendPort != false) url += "&port=${webSocketPort}"
         if (auth == "session") url += "&token=${generateSessionToken(playerId)}"
+        if (websocketSecure == true) url += "&secure=true"
 
         return url
     }

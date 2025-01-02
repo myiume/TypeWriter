@@ -61,11 +61,19 @@ class _ConnectButtons extends HookConsumerWidget {
   void connectTo(
     WidgetRef ref,
     String hostname,
-    int port, [
+    int? port, {
     String token = "",
-  ]) {
+    bool secure = false,
+  }) {
     ref.read(appRouter).replaceAll(
-      [ConnectRoute(hostname: hostname, port: port, token: token)],
+      [
+        ConnectRoute(
+          hostname: hostname,
+          port: port,
+          token: token,
+          secure: secure,
+        ),
+      ],
     );
   }
 
@@ -104,8 +112,9 @@ class _ConnectButtons extends HookConsumerWidget {
     // The token is optional and the hostname can be "hostname" or "host"
     final hostname =
         uri.queryParameters["host"] ?? uri.queryParameters["hostname"];
-    final port = int.tryParse(uri.queryParameters["port"] ?? "9092") ?? 9092;
+    final port = int.tryParse(uri.queryParameters["port"] ?? "");
     final token = uri.queryParameters["token"] ?? "";
+    final secure = uri.queryParameters["secure"] == "true";
 
     debugPrint("Connecting to $hostname:$port with token $token");
 
@@ -113,7 +122,7 @@ class _ConnectButtons extends HookConsumerWidget {
       return;
     }
 
-    connectTo(ref, hostname, port, token);
+    connectTo(ref, hostname, port, token: token, secure: secure);
   }
 
   @override

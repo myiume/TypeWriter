@@ -452,7 +452,7 @@ class _EntryTriggersProviderElement
   String get entryId => (origin as EntryTriggersProvider).entryId;
 }
 
-String _$graphHash() => r'e4f41f9d103b480b2d1ef7d1ba2aa3264777a45b';
+String _$graphHash() => r'2452c3b9af51100a76c3ac944fed3e48221d079f';
 
 /// See also [graph].
 @ProviderFor(graph)

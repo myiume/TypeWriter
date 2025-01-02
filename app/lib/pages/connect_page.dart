@@ -17,12 +17,14 @@ class ConnectPage extends HookConsumerWidget {
     @QueryParam("host") this.hostname = "",
     @QueryParam() this.port,
     @QueryParam() this.token = "",
+    @QueryParam() this.secure = false,
     super.key,
   });
 
   final String hostname;
   final int? port;
   final String token;
+  final bool secure;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -39,9 +41,12 @@ class ConnectPage extends HookConsumerWidget {
     useEffect(
       () {
         final timer = Timer(1.seconds, () {
-          ref
-              .read(socketProvider.notifier)
-              .init(hostname, port, token.isEmpty ? null : token);
+          ref.read(socketProvider.notifier).init(
+                hostname,
+                port,
+                token: token.isEmpty ? null : token,
+                secure: secure,
+              );
         });
         return timer.cancel;
       },

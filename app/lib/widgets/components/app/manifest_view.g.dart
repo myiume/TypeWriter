@@ -191,7 +191,7 @@ class _EntryReferencesProviderElement
   String get entryId => (origin as EntryReferencesProvider).entryId;
 }
 
-String _$manifestGraphHash() => r'aaa29962a4a2753d54aa40fdfb5aedbf7f09e317';
+String _$manifestGraphHash() => r'b639f8877d5c21c8688cea9a7fbdafac945c0876';
 
 /// See also [manifestGraph].
 @ProviderFor(manifestGraph)

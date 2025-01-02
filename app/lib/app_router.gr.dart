@@ -35,6 +35,7 @@ class ConnectRoute extends PageRouteInfo<ConnectRouteArgs> {
     String hostname = "",
     int? port,
     String token = "",
+    bool secure = false,
     Key? key,
     List<PageRouteInfo>? children,
   }) : super(
@@ -43,12 +44,14 @@ class ConnectRoute extends PageRouteInfo<ConnectRouteArgs> {
             hostname: hostname,
             port: port,
             token: token,
+            secure: secure,
             key: key,
           ),
           rawQueryParams: {
             'host': hostname,
             'port': port,
             'token': token,
+            'secure': secure,
           },
           initialChildren: children,
         );
@@ -70,11 +73,16 @@ class ConnectRoute extends PageRouteInfo<ConnectRouteArgs> {
                   'token',
                   "",
                 ),
+                secure: queryParams.getBool(
+                  'secure',
+                  false,
+                ),
               ));
       return ConnectPage(
         hostname: args.hostname,
         port: args.port,
         token: args.token,
+        secure: args.secure,
         key: args.key,
       );
     },
@@ -86,6 +94,7 @@ class ConnectRouteArgs {
     this.hostname = "",
     this.port,
     this.token = "",
+    this.secure = false,
     this.key,
   });
 
@@ -95,11 +104,13 @@ class ConnectRouteArgs {
 
   final String token;
 
+  final bool secure;
+
   final Key? key;
 
   @override
   String toString() {
-    return 'ConnectRouteArgs{hostname: $hostname, port: $port, token: $token, key: $key}';
+    return 'ConnectRouteArgs{hostname: $hostname, port: $port, token: $token, secure: $secure, key: $key}';
   }
 }
 
