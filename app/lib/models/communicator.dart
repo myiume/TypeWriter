@@ -116,7 +116,8 @@ class SocketNotifier extends StateNotifier<Socket?> {
     if (port != null) url += ":$port";
     if (token != null) url += "?token=$token";
 
-    debugPrint("Initializing socket");
+    debugPrint("Initializing socket to $url");
+
     final socket = io(
       url,
       OptionBuilder().setTransports(["websocket"]).disableAutoConnect().build(),
