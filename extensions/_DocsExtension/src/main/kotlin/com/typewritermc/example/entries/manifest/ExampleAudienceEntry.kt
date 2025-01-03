@@ -2,10 +2,13 @@ package com.typewritermc.example.entries.manifest
 
 import com.typewritermc.example.entries.trigger.SomeBukkitEvent
 import com.typewritermc.core.books.pages.Colors
+import com.typewritermc.core.entries.Ref
+import com.typewritermc.core.entries.emptyRef
 import com.typewritermc.core.extension.annotations.Entry
 import com.typewritermc.engine.paper.entry.entries.AudienceDisplay
 import com.typewritermc.engine.paper.entry.entries.AudienceEntry
 import com.typewritermc.engine.paper.entry.entries.TickableDisplay
+import com.typewritermc.engine.paper.entry.inAudience
 import com.typewritermc.engine.paper.utils.ThreadType
 import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
@@ -88,3 +91,11 @@ class AudienceDisplayWithEvents : AudienceDisplay() {
     // highlight-end
 }
 //</code-block:audience_display_with_events>
+
+fun checkPlayerInAudience(player: Player, ref: Ref<out AudienceEntry>) {
+    //<code-block:check_player_in_audience>
+    if (player.inAudience(ref)) {
+        // Do something with the player
+    }
+    //</code-block:check_player_in_audience>
+}

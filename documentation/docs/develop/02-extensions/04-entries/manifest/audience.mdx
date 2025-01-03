@@ -65,6 +65,16 @@ Events will trigger for _**all**_ players, not just those in the audience.
 **Always check if the player is in the audience before performing audience-specific actions.**
 :::
 
+### Check if a player is in the audience of an entry
+
+Suppose you have a `Ref<out AudienceEntry>`.
+To check if a player is in the audience of an entry,
+you can use the `player.inAudience` method that returns `true` if the player is in the audience of the entry.
+This is incredibly convenient, especially because it automatically handles all parents of the entry for you as well.
+Here's an example:
+
+<CodeSnippet tag="check_player_in_audience" json={require("../../../snippets.json")} />
+
 ## Best Practices
 
 1. **State Management**: While state is allowed within the `AudienceDisplay`, ensure that all used state is contained within the display and does not leak outside.
