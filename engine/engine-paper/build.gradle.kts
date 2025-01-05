@@ -9,7 +9,7 @@ plugins {
 
 repositories {
     mavenCentral()
-    // Floodgate
+    // Floodgate & Geyser
     maven("https://repo.opencollab.dev/main/")
     // PacketEvents, CommandAPI
     maven("https://repo.codemc.io/repository/maven-releases/")
@@ -59,6 +59,7 @@ dependencies {
     compileOnlyApi("com.github.retrooper:packetevents-api:2.7.0")
     compileOnlyApi("com.github.retrooper:packetevents-spigot:2.7.0")
     compileOnly("me.clip:placeholderapi:2.11.6")
+    compileOnlyApi("org.geysermc.geyser:api:2.4.2-SNAPSHOT")
     compileOnlyApi("org.geysermc.floodgate:api:2.2.3-SNAPSHOT")
 
     testImplementation("org.mockbukkit.mockbukkit:mockbukkit-v1.21:4.18.0")

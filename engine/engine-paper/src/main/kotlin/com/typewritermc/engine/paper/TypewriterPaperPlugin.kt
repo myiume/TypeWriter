@@ -173,22 +173,24 @@ class TypewriterPaperPlugin : KotlinPlugin(), KoinComponent {
         get<PlayerSessionManager>().load()
         get<EntryListeners>().load()
         get<AudienceManager>().load()
-        CustomCommandEntry.registerAll()
+        if (CommandAPI.isLoaded()) {
+            CustomCommandEntry.registerAll()
+            typeWriterCommand()
+        }
 
         if (server.pluginManager.getPlugin("PlaceholderAPI") != null) {
             PlaceholderExpansion.load()
         }
-
-        typeWriterCommand()
     }
 
     suspend fun unload() {
         TypewriterUnloadEvent().callEvent()
 
-        if (CommandAPI.isLoaded())
+        if (CommandAPI.isLoaded()) {
             CommandAPI.unregister("typewriter")
+            CustomCommandEntry.unregisterAll()
+        }
 
-        CustomCommandEntry.unregisterAll()
         get<PacketInterceptor>().unload()
         get<AudienceManager>().unload()
         get<EntryListeners>().unload()
@@ -208,6 +210,7 @@ class TypewriterPaperPlugin : KotlinPlugin(), KoinComponent {
         load()
     }
 
+    val isGeyserInstalled: Boolean by lazy { server.pluginManager.isPluginEnabled("Geyser-Spigot") }
     val isFloodgateInstalled: Boolean by lazy { server.pluginManager.isPluginEnabled("Floodgate") }
 
     override suspend fun onDisableAsync() {

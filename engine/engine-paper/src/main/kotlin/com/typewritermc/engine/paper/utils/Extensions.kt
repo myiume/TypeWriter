@@ -25,6 +25,8 @@ import org.bukkit.inventory.meta.ItemMeta
 import org.bukkit.inventory.meta.SkullMeta
 import org.bukkit.profile.PlayerTextures
 import org.geysermc.floodgate.api.FloodgateApi
+import org.geysermc.geyser.api.GeyserApi
+import org.geysermc.geyser.api.connection.GeyserConnection
 import org.koin.java.KoinJavaComponent.get
 import java.io.File
 import java.net.MalformedURLException
@@ -40,6 +42,12 @@ val Player.isFloodgate: Boolean
     get() {
         if (!get<TypewriterPaperPlugin>(TypewriterPaperPlugin::class.java).isFloodgateInstalled) return false
         return FloodgateApi.getInstance().isFloodgatePlayer(this.uniqueId)
+    }
+
+val Player.geyserConnection: GeyserConnection?
+    get() {
+        if (!get<TypewriterPaperPlugin>(TypewriterPaperPlugin::class.java).isGeyserInstalled) return null
+        return GeyserApi.api().connectionByUuid(this.uniqueId)
     }
 
 /**

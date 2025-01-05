@@ -14,6 +14,7 @@ import com.typewritermc.engine.paper.entry.temporal.setTemporalFrame
 import com.typewritermc.engine.paper.interaction.InterceptionBundle
 import com.typewritermc.engine.paper.interaction.interceptPackets
 import com.typewritermc.engine.paper.plugin
+import com.typewritermc.engine.paper.utils.isFloodgate
 import lirand.api.extensions.events.SimpleListener
 import lirand.api.extensions.events.listen
 import lirand.api.extensions.events.unregister
@@ -54,10 +55,14 @@ data class SkipSegment(
     override val endFrame: Int = 0,
 ) : Segment
 
-enum class SkipConfirmationKey(val keybind: String) {
-    SNEAK("<key:key.sneak>"),
-    SWAP_HANDS("<key:key.swapOffhand>"),
+enum class SkipConfirmationKey(val keybind: String, val bedrockKeybind: String) {
+    SNEAK("<key:key.sneak>", "Sneak"),
+    SWAP_HANDS("<key:key.swapOffhand>", "Swap Offhand"),
     ;
+
+    fun keybind(player: Player): String {
+        return if (player.isFloodgate) bedrockKeybind else keybind
+    }
 }
 
 class SkipCinematicAction(

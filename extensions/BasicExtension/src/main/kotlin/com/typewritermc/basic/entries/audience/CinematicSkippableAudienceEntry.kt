@@ -44,10 +44,11 @@ class CinematicSkippableAudienceEntry(
 
     override fun parser(): PlaceholderParser = placeholderParser {
         supply { player ->
-            val default = SkipConfirmationKey.SNEAK.keybind
-            if (player == null) return@supply default
-            val display = ref().findDisplay() as? CinematicSkippableAudienceDisplay ?: return@supply default
-            display.confirmationKey(player)?.keybind ?: default
+            val default = SkipConfirmationKey.SNEAK
+
+            if (player == null) return@supply default.bedrockKeybind
+            val display = ref().findDisplay() as? CinematicSkippableAudienceDisplay ?: return@supply default.keybind(player)
+            display.confirmationKey(player)?.keybind(player) ?: default.keybind(player)
         }
     }
 }
