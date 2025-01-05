@@ -58,6 +58,8 @@ private val delayOptionShow: Int by snippet(
 class JavaOptionDialogueDialogueMessenger(player: Player, context: InteractionContext, entry: OptionDialogueEntry) :
     DialogueMessenger<OptionDialogueEntry>(player, context, entry) {
 
+    private var confirmationKeyHandler: ConfirmationKeyHandler? = null
+
     private val typeDuration = entry.duration.get(player)
 
     private var selectedIndex = 0
@@ -101,7 +103,7 @@ class JavaOptionDialogueDialogueMessenger(player: Player, context: InteractionCo
         totalDuration = typingDuration + optionsShowingDuration
 
         super.init()
-        confirmationKey.listen(this, player.uniqueId) {
+        confirmationKeyHandler = confirmationKey.handler(player) {
             completeOrFinish()
         }
     }
@@ -201,5 +203,11 @@ class JavaOptionDialogueDialogueMessenger(player: Player, context: InteractionCo
         }
 
         return Component.join(JoinConfiguration.noSeparators(), lines)
+    }
+
+    override fun dispose() {
+        super.dispose()
+        confirmationKeyHandler?.dispose()
+        confirmationKeyHandler = null
     }
 }

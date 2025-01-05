@@ -3,7 +3,6 @@ package com.typewritermc.basic.entries.dialogue.messengers.spoken
 import com.typewritermc.basic.entries.dialogue.SpokenDialogueEntry
 import com.typewritermc.core.interaction.InteractionContext
 import com.typewritermc.engine.paper.entry.dialogue.*
-import com.typewritermc.engine.paper.entry.entries.DialogueEntry
 import com.typewritermc.engine.paper.extensions.placeholderapi.parsePlaceholders
 import com.typewritermc.engine.paper.interaction.chatHistory
 import com.typewritermc.engine.paper.snippets.snippet
@@ -39,6 +38,7 @@ val spokenInstructionTicksBase: Long by snippet("dialogue.spoken.instruction.tic
 
 class JavaSpokenDialogueDialogueMessenger(player: Player, context: InteractionContext, entry: SpokenDialogueEntry) :
     DialogueMessenger<SpokenDialogueEntry>(player, context, entry) {
+    private var confirmationKeyHandler: ConfirmationKeyHandler? = null
 
     private var speakerDisplayName = ""
     private var text = ""
@@ -58,7 +58,7 @@ class JavaSpokenDialogueDialogueMessenger(player: Player, context: InteractionCo
         text = entry.text.get(player).parsePlaceholders(player)
         typingDuration = typingDurationType.totalDuration(text.stripped(), entry.duration.get(player))
 
-        confirmationKey.listen(this, player.uniqueId) {
+        confirmationKeyHandler = confirmationKey.handler(player) {
             completeOrFinish()
         }
     }
@@ -73,6 +73,12 @@ class JavaSpokenDialogueDialogueMessenger(player: Player, context: InteractionCo
             playedTime,
             eventTriggers.isEmpty()
         )
+    }
+
+    override fun dispose() {
+        super.dispose()
+        confirmationKeyHandler?.dispose()
+        confirmationKeyHandler = null
     }
 }
 
