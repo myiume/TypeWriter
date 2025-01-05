@@ -7,6 +7,7 @@ import com.github.retrooper.packetevents.wrapper.play.client.WrapperPlayClientPl
 import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerPlayerPositionAndLook
 import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerSetSlot
 import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerWindowItems
+import com.typewritermc.basic.entries.cinematic.DisplayCameraAction.Companion.BASE_INTERPOLATION
 import com.typewritermc.core.books.pages.Colors
 import com.typewritermc.core.extension.annotations.*
 import com.typewritermc.core.interaction.InteractionBoundState
@@ -49,6 +50,12 @@ import org.bukkit.inventory.meta.SkullMeta
 import org.bukkit.potion.PotionEffect
 import org.bukkit.potion.PotionEffect.INFINITE_DURATION
 import org.bukkit.potion.PotionEffectType.INVISIBILITY
+import org.cloudburstmc.math.vector.Vector3f
+import org.geysermc.geyser.api.bedrock.camera.CameraEaseType
+import org.geysermc.geyser.api.bedrock.camera.CameraPerspective
+import org.geysermc.geyser.api.bedrock.camera.CameraPosition
+import org.geysermc.geyser.api.bedrock.camera.GuiElement
+import org.geysermc.geyser.api.connection.GeyserConnection
 import java.util.*
 
 @Entry("camera_cinematic", "Create a cinematic camera path", Colors.CYAN, "fa6-solid:video")
@@ -132,7 +139,12 @@ class CameraCinematicAction(
 
     override suspend fun setup() {
         action = if (player.isFloodgate) {
-            TeleportCameraAction(player)
+            val geyserConnection = player.geyserConnection
+            if (geyserConnection != null) {
+                BedrockCameraAction(player, geyserConnection)
+            } else {
+                TeleportCameraAction(player)
+            }
         } else {
             DisplayCameraAction(player)
         }
@@ -420,6 +432,95 @@ private class TeleportCameraAction(
     }
 
     override suspend fun stop() {
+    }
+}
+
+private class BedrockCameraAction(
+    private val player: Player,
+    private val geyserConnection: GeyserConnection,
+) : CameraAction {
+    private val cameraLockId = UUID.randomUUID()
+    private var path = emptyList<PointSegment>()
+
+    private fun setupPath(segment: CameraSegment) {
+        path = segment.path.transform(player, segment.duration - BASE_INTERPOLATION) {
+            // We want this to be static as we assume the user was the correct height when capturing.
+            val playerDefaultEyeHeight = 1.6
+            it.add(y = playerDefaultEyeHeight)
+        }
+    }
+
+    override suspend fun startSegment(segment: CameraSegment) {
+        setupPath(segment)
+        val position = path.first().position
+        geyserConnection.camera().apply {
+            this.lockCamera(true, cameraLockId)
+            this.forceCameraPerspective(CameraPerspective.FIRST_PERSON)
+            this.hideElement(
+                GuiElement.PAPER_DOLL,
+                GuiElement.ARMOR,
+                GuiElement.TOOL_TIPS,
+                GuiElement.TOUCH_CONTROLS,
+                GuiElement.CROSSHAIR,
+                GuiElement.HOTBAR,
+                GuiElement.HEALTH,
+                GuiElement.PROGRESS_BAR,
+                GuiElement.FOOD_BAR,
+                GuiElement.AIR_BUBBLES_BAR,
+                GuiElement.VEHICLE_HEALTH,
+                GuiElement.EFFECTS_BAR,
+                GuiElement.ITEM_TEXT_POPUP,
+            )
+            this.sendCameraPosition(
+                CameraPosition.builder()
+                    .position(Vector3f.from(position.x, position.y, position.z))
+                    .renderPlayerEffects(true)
+                    .rotationX(position.pitch.toInt())
+                    .rotationY(position.yaw.toInt())
+                    .playerPositionForAudio(false)
+                    .build()
+            )
+        }
+    }
+
+    override suspend fun tickSegment(frame: Int) {
+        val position = path.interpolate(frame)
+        geyserConnection.camera().apply {
+            this.sendCameraPosition(
+                CameraPosition.builder()
+                    .position(Vector3f.from(position.x, position.y, position.z))
+                    .easeSeconds(0.5f)
+                    .easeType(CameraEaseType.LINEAR)
+                    .renderPlayerEffects(true)
+                    .rotationX(position.pitch.toInt())
+                    .rotationY(position.yaw.toInt())
+                    .playerPositionForAudio(false)
+                    .build()
+            )
+        }
+    }
+
+    override suspend fun switchSegment(newSegment: CameraSegment) {
+        setupPath(newSegment)
+        val position = path.first().position
+        geyserConnection.camera().apply {
+            this.sendCameraPosition(
+                CameraPosition.builder()
+                    .position(Vector3f.from(position.x, position.y, position.z))
+                    .renderPlayerEffects(true)
+                    .rotationX(position.pitch.toInt())
+                    .rotationY(position.yaw.toInt())
+                    .playerPositionForAudio(false)
+                    .build()
+            )
+        }
+    }
+
+    override suspend fun stop() {
+        geyserConnection.camera().apply {
+            this.lockCamera(false, cameraLockId)
+            this.clearCameraInstructions()
+        }
     }
 }
 

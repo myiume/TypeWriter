@@ -48,7 +48,7 @@ class AudienceManager : Listener, Reloadable {
                 // Wait for the remainder or the tick
                 val wait = TICK_MS - (endTime - startTime) - AVERAGE_SCHEDULING_DELAY_MS
                 if (wait > 0) delay(wait)
-                else logger.warning("Typewriter Audience Manager Tick took too long! (${endTime - startTime}ms)")
+                else if (wait < -100) logger.warning("Typewriter Audience Manager Tick took too long! (${endTime - startTime}ms)")
             }
         }
     }
