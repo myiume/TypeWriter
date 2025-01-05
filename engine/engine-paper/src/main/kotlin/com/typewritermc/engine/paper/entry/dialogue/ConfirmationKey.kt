@@ -5,8 +5,15 @@ import com.typewritermc.engine.paper.plugin
 import com.typewritermc.engine.paper.utils.config
 import com.typewritermc.engine.paper.utils.reloadable
 import lirand.api.extensions.events.listen
+import lirand.api.extensions.server.server
+import org.bukkit.NamespacedKey
+import org.bukkit.attribute.Attribute
+import org.bukkit.attribute.AttributeModifier
+import org.bukkit.entity.Player
 import org.bukkit.event.Cancellable
+import org.bukkit.event.EventHandler
 import org.bukkit.event.EventPriority
+import org.bukkit.event.HandlerList.unregisterAll
 import org.bukkit.event.Listener
 import org.bukkit.event.player.PlayerEvent
 import org.bukkit.event.player.PlayerSwapHandItemsEvent
@@ -36,33 +43,69 @@ enum class ConfirmationKey(val keybind: String) {
     SNEAK("<key:key.sneak>"),
     ;
 
-    private inline fun <reified E : PlayerEvent> listenEvent(
-        listener: Listener,
-        playerUUID: UUID,
-        crossinline block: () -> Unit
-    ) {
-        plugin.listen(
-            listener,
-            EventPriority.HIGHEST,
-        ) event@{ event: E ->
-            if (event.player.uniqueId != playerUUID) return@event
-            if (event is PlayerToggleSneakEvent && !event.isSneaking) return@event // Otherwise the event is fired twice
-            block()
-            if (event is Cancellable) event.isCancelled = true
-        }
-    }
-
-    fun listen(listener: Listener, playerUUID: UUID, block: () -> Unit) {
-        when (this) {
-            SWAP_HANDS -> listenEvent<PlayerSwapHandItemsEvent>(listener, playerUUID, block)
-            JUMP -> listenEvent<PlayerJumpEvent>(listener, playerUUID, block)
-            SNEAK -> listenEvent<PlayerToggleSneakEvent>(listener, playerUUID, block)
-        }
+    fun handler(player: Player, block: () -> Unit): ConfirmationKeyHandler {
+        return when (this) {
+            SWAP_HANDS -> SwapHandsHandler(player, block)
+            JUMP -> JumpHandler(player, block)
+            SNEAK -> SneakHandler(player, block)
+        }.apply { initialize() }
     }
 
     companion object {
         fun fromString(string: String): ConfirmationKey? {
             return entries.find { it.name.equals(string, true) }
         }
+    }
+}
+
+sealed interface ConfirmationKeyHandler : Listener {
+    val player: Player
+    val block: () -> Unit
+
+    fun initialize() {
+        server.pluginManager.registerEvents(this, plugin)
+    }
+
+    fun dispose() {
+        unregisterAll()
+    }
+}
+
+class SwapHandsHandler(override val player: Player, override val block: () -> Unit) : ConfirmationKeyHandler {
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+    fun onSwapHands(event: PlayerSwapHandItemsEvent) {
+        if (event.player.uniqueId != player.uniqueId) return
+        event.isCancelled = true
+        block()
+    }
+}
+
+class JumpHandler(override val player: Player, override val block: () -> Unit) : ConfirmationKeyHandler {
+    private val key = NamespacedKey(plugin, "jump_confirmation")
+
+    override fun initialize() {
+        super.initialize()
+        player.getAttribute(Attribute.JUMP_STRENGTH)?.addModifier(AttributeModifier(key, -1.0, AttributeModifier.Operation.MULTIPLY_SCALAR_1))
+    }
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+    fun onJump(event: PlayerJumpEvent) {
+        if (event.player.uniqueId != player.uniqueId) return
+        event.isCancelled = true
+        block()
+    }
+
+    override fun dispose() {
+        super.dispose()
+        player.getAttribute(Attribute.JUMP_STRENGTH)?.removeModifier(key)
+    }
+}
+
+class SneakHandler(override val player: Player, override val block: () -> Unit) : ConfirmationKeyHandler {
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+    fun onSneak(event: PlayerToggleSneakEvent) {
+        if (event.player.uniqueId != player.uniqueId) return
+        if (!event.isSneaking) return
+        event.isCancelled = true
+        block()
     }
 }

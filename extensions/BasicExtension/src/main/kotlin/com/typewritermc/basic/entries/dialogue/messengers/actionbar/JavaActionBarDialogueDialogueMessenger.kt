@@ -28,6 +28,8 @@ class JavaActionBarDialogueDialogueMessenger(
 ) :
     DialogueMessenger<ActionBarDialogueEntry>(player, context, entry) {
 
+    private var confirmationKeyHandler: ConfirmationKeyHandler? = null
+
     private var speakerDisplayName = ""
     private var text = ""
     private var typingDuration = Duration.ZERO
@@ -46,7 +48,7 @@ class JavaActionBarDialogueDialogueMessenger(
         text = entry.text.get(player).parsePlaceholders(player)
         typingDuration = typingDurationType.totalDuration(text.stripped(), entry.duration.get(player))
 
-        confirmationKey.listen(this, player.uniqueId) {
+        confirmationKeyHandler = confirmationKey.handler(player) {
             completeOrFinish()
         }
 
@@ -97,5 +99,7 @@ class JavaActionBarDialogueDialogueMessenger(
         super.dispose()
         player.stopBlockingActionBar()
         player.sendActionBar(Component.empty())
+        confirmationKeyHandler?.dispose()
+        confirmationKeyHandler = null
     }
 }
