@@ -14,6 +14,8 @@ import com.typewritermc.core.extension.annotations.Colored
 import com.typewritermc.core.extension.annotations.Help
 import com.typewritermc.core.extension.annotations.Placeholder
 import com.typewritermc.engine.paper.entry.*
+import com.typewritermc.engine.paper.entry.audience.PlayerSingleDisplay
+import com.typewritermc.engine.paper.entry.audience.SingleFilter
 import com.typewritermc.engine.paper.extensions.packetevents.sendPacketTo
 import com.typewritermc.engine.paper.extensions.placeholderapi.parsePlaceholders
 import com.typewritermc.engine.paper.utils.asMini

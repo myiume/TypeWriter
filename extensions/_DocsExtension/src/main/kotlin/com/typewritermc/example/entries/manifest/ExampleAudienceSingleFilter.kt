@@ -5,6 +5,8 @@ import com.typewritermc.core.entries.PriorityEntry
 import com.typewritermc.core.entries.Ref
 import com.typewritermc.core.entries.ref
 import com.typewritermc.core.extension.annotations.Entry
+import com.typewritermc.engine.paper.entry.audience.PlayerSingleDisplay
+import com.typewritermc.engine.paper.entry.audience.SingleFilter
 import com.typewritermc.engine.paper.entry.entries.*
 import org.bukkit.entity.Player
 import java.util.*

@@ -8,6 +8,8 @@ import com.typewritermc.core.entries.ref
 import com.typewritermc.core.extension.annotations.Entry
 import com.typewritermc.core.extension.annotations.Help
 import com.typewritermc.engine.paper.entry.*
+import com.typewritermc.engine.paper.entry.audience.PlayerSingleDisplay
+import com.typewritermc.engine.paper.entry.audience.SingleFilter
 import com.typewritermc.engine.paper.entry.entries.*
 import com.typewritermc.engine.paper.extensions.placeholderapi.parsePlaceholders
 import com.typewritermc.engine.paper.utils.asMini

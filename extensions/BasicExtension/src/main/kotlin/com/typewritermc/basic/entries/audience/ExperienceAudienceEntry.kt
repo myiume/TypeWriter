@@ -11,6 +11,8 @@ import com.typewritermc.core.entries.ref
 import com.typewritermc.core.extension.annotations.Default
 import com.typewritermc.core.extension.annotations.Entry
 import com.typewritermc.core.extension.annotations.Help
+import com.typewritermc.engine.paper.entry.audience.PlayerSingleDisplay
+import com.typewritermc.engine.paper.entry.audience.SingleFilter
 import com.typewritermc.engine.paper.entry.entries.*
 import com.typewritermc.engine.paper.logger
 import org.bukkit.entity.Player

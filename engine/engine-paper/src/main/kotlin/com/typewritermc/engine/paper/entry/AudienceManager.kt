@@ -10,6 +10,7 @@ import lirand.api.extensions.server.server
 import com.typewritermc.engine.paper.entry.entries.*
 import com.typewritermc.engine.paper.interaction.AVERAGE_SCHEDULING_DELAY_MS
 import com.typewritermc.engine.paper.interaction.TICK_MS
+import com.typewritermc.engine.paper.logger
 import com.typewritermc.engine.paper.plugin
 import com.typewritermc.engine.paper.utils.ThreadType.DISPATCHERS_ASYNC
 import org.bukkit.entity.Player
@@ -47,6 +48,7 @@ class AudienceManager : Listener, Reloadable {
                 // Wait for the remainder or the tick
                 val wait = TICK_MS - (endTime - startTime) - AVERAGE_SCHEDULING_DELAY_MS
                 if (wait > 0) delay(wait)
+                else logger.warning("Typewriter Audience Manager Tick took too long! (${endTime - startTime}ms)")
             }
         }
     }
