@@ -18,38 +18,38 @@ import com.typewritermc.entity.entries.data.minecraft.living.applyLivingEntityDa
 import com.typewritermc.entity.entries.entity.WrapperFakeEntity
 import org.bukkit.entity.Player
 
-@Entry("skeleton_definition", "A skeleton entity", Colors.ORANGE, "healthicons:skeleton")
-@Tags("skeleton_definition")
+@Entry("breeze_definition", "A breeze entity", Colors.BLUE, "solar:wind-bold")
+@Tags("breeze_definition")
 /**
- * The `SkeletonDefinition` class is an entry that shows up as a skeleton in-game.
+ * The `BreezeDefinition` class is an entry that shows up as a breeze in-game.
  *
  * ## How could this be used?
- * This could be used to create a skeleton entity.
+ * This could be used to create a breeze entity.
  */
-class SkeletonDefinition(
+class BreezeDefinition(
     override val id: String = "",
     override val name: String = "",
     override val displayName: Var<String> = ConstVar(""),
     override val sound: Sound = Sound.EMPTY,
-    @OnlyTags("generic_entity_data", "living_entity_data", "mob_data", "skeleton_data")
+    @OnlyTags("generic_entity_data", "living_entity_data", "mob_data", "breeze_data")
     override val data: List<Ref<EntityData<*>>> = emptyList(),
 ) : SimpleEntityDefinition {
-    override fun create(player: Player): FakeEntity = SkeletonEntity(player)
+    override fun create(player: Player): FakeEntity = BreezeEntity(player)
 }
 
-@Entry("skeleton_instance", "An instance of a skeleton entity", Colors.YELLOW, "healthicons:skeleton")
-class SkeletonInstance(
+@Entry("breeze_instance", "An instance of a breeze entity", Colors.CYAN, "solar:wind-bold")
+class BreezeInstance(
     override val id: String = "",
     override val name: String = "",
-    override val definition: Ref<SkeletonDefinition> = emptyRef(),
+    override val definition: Ref<BreezeDefinition> = emptyRef(),
     override val spawnLocation: Position = Position.ORIGIN,
-    @OnlyTags("generic_entity_data", "living_entity_data", "mob_data", "skeleton_data")
+    @OnlyTags("generic_entity_data", "living_entity_data", "mob_data", "breeze_data")
     override val data: List<Ref<EntityData<*>>> = emptyList(),
     override val activity: Ref<out SharedEntityActivityEntry> = emptyRef(),
 ) : SimpleEntityInstance
 
-private class SkeletonEntity(player: Player) : WrapperFakeEntity(
-    EntityTypes.SKELETON,
+private class BreezeEntity(player: Player) : WrapperFakeEntity(
+    EntityTypes.BREEZE,
     player,
 ) {
     override fun applyProperty(property: EntityProperty) {
