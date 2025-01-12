@@ -28,12 +28,14 @@ import com.typewritermc.engine.paper.utils.toBukkitLocation
 import com.typewritermc.engine.paper.utils.toCoordinate
 import com.typewritermc.engine.paper.utils.toWorld
 import com.typewritermc.entity.entries.data.minecraft.*
+import com.typewritermc.entity.entries.data.minecraft.living.DamagedProperty
 import com.typewritermc.entity.entries.data.minecraft.living.EquipmentProperty
 import io.papermc.paper.event.player.PlayerArmSwingEvent
 import org.bukkit.SoundCategory
 import org.bukkit.entity.Player
 import org.bukkit.entity.Pose
 import org.bukkit.event.EventHandler
+import org.bukkit.event.entity.EntityDamageEvent
 import org.bukkit.inventory.EquipmentSlot
 import org.bukkit.inventory.ItemStack
 import org.koin.core.qualifier.named
@@ -129,6 +131,7 @@ class EntityCinematicAction(
                 (FakeProvider(PositionProperty::class) { currentData.location?.toProperty(player.world.toWorld()) } to Int.MAX_VALUE) +
                 (FakeProvider(PoseProperty::class) { currentData.pose?.toProperty() } to Int.MAX_VALUE) +
                 (FakeProvider(ArmSwingProperty::class) { currentData.swing?.toProperty() } to Int.MAX_VALUE) +
+                (FakeProvider(DamagedProperty::class) { DamagedProperty(currentData.damaged) } to Int.MAX_VALUE) +
                 (FakeProvider(EquipmentProperty::class) {
                     val equipment =
                         mutableMapOf<com.github.retrooper.packetevents.protocol.player.EquipmentSlot, com.github.retrooper.packetevents.protocol.item.ItemStack>()
@@ -241,6 +244,7 @@ data class EntityFrame(
     val location: Coordinate? = null,
     val pose: EntityPose? = null,
     val swing: ArmSwing? = null,
+    val damaged: Boolean = false,
 
     val mainHand: ItemStack? = null,
     val offHand: ItemStack? = null,
@@ -254,6 +258,7 @@ data class EntityFrame(
             location = next.location ?: location,
             pose = next.pose ?: pose,
             swing = next.swing,
+            damaged = next.damaged,
             mainHand = next.mainHand ?: mainHand,
             offHand = next.offHand ?: offHand,
             helmet = next.helmet ?: helmet,
@@ -284,6 +289,7 @@ class EntityCinematicRecording(
     klass: KClass<EntityFrame>,
 ) : RecordingCinematicContentMode<EntityFrame>(context, player, initialFrame, klass) {
     private var swing: ArmSwing? = null
+    private var damaged: Boolean = false
 
     @EventHandler
     fun onArmSwing(event: PlayerArmSwingEvent) {
@@ -295,6 +301,12 @@ class EntityCinematicRecording(
                 else -> ArmSwing.BOTH
             }
         )
+    }
+
+    @EventHandler
+    fun onPlayerDamaged(event: EntityDamageEvent) {
+        if (event.entity.uniqueId != player.uniqueId) return
+        damaged = true
     }
 
     private fun addSwing(swing: ArmSwing) {
@@ -313,6 +325,7 @@ class EntityCinematicRecording(
             location = player.location.toCoordinate(),
             pose = pose.toEntityPose(),
             swing = swing,
+            damaged = damaged,
             mainHand = inv.itemInMainHand,
             offHand = inv.itemInOffHand,
             helmet = inv.helmet,
@@ -321,6 +334,7 @@ class EntityCinematicRecording(
             boots = inv.boots,
         )
         this.swing = null
+        this.damaged = false
         return data
     }
 
@@ -336,6 +350,9 @@ class EntityCinematicRecording(
                     player.swingOffHand()
                 }
             }
+        }
+        if (value.damaged) {
+            player.damage(0.0)
         }
 
         value.mainHand?.let { player.inventory.setItemInMainHand(it) }

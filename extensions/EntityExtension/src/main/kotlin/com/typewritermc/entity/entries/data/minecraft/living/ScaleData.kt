@@ -31,5 +31,5 @@ data class ScaleProperty(val scale: Double) : EntityProperty {
 }
 
 fun applyScaleData(entity: WrapperLivingEntity, property: ScaleProperty) {
-    entity.attributes.setAttribute(Attributes.GENERIC_SCALE, property.scale)
+    entity.attributes.setAttribute(Attributes.SCALE, property.scale)
 }
