@@ -5,8 +5,7 @@ use log::{debug, warn};
 use poise::{
     serenity_prelude::{
         ButtonStyle, CacheHttp, ChannelId, CreateButton, CreateEmbed, CreateEmbedFooter,
-        CreateMessage, EditThread, ForumTag, Http, Mentionable, ReactionType, ThreadMember,
-        Timestamp,
+        CreateMessage, EditThread, ForumTag, Http, Mentionable, ReactionType, Timestamp,
     },
     CreateReply, ReplyHandle,
 };
@@ -176,51 +175,29 @@ pub async fn remove_support_members_from_thread<C>(
 where
     C: CacheHttp + AsRef<Http>,
 {
-    for member in channel_id.get_thread_members(&ctx).await? {
-        let user_id = member.user_id.clone();
-        if !is_support(&ctx, member).await {
+    let channel = channel_id.to_channel(&ctx).await?;
+    let guild_channel = channel.guild().ok_or(WinstonError::NotAGuildChannel)?;
+    let guild_id = guild_channel.guild_id;
+
+    for thread_member in channel_id.get_thread_members(&ctx).await? {
+        let member = guild_id.member(&ctx, thread_member.user_id).await?;
+        if !member
+            .roles
+            .iter()
+            .any(|role_id| *role_id == SUPPORT_ROLE_ID)
+        {
             continue;
         }
 
-        debug!("Removing member from thread: {user_id}");
+        debug!("Removing member from thread: {}", member);
 
-        if let Err(e) = channel_id.remove_thread_member(&ctx, user_id).await {
+        if let Err(e) = channel_id
+            .remove_thread_member(&ctx, thread_member.user_id)
+            .await
+        {
             warn!("Could not remove member from thread: {e}");
         }
     }
 
     Ok(())
-}
-
-async fn is_support(ctx: &impl CacheHttp, thread_member: ThreadMember) -> bool {
-    let member = match thread_member.member {
-        Some(member) => member,
-        None => {
-            let Some(guild_id) = thread_member.guild_id else {
-                warn!("Could not get guild from thread member");
-                return false;
-            };
-
-            let guild = match guild_id.to_partial_guild(&ctx).await {
-                Ok(guild) => guild,
-                Err(e) => {
-                    warn!("Could not get guild from thread member: {e}");
-                    return false;
-                }
-            };
-
-            match guild.member(ctx, thread_member.user_id).await {
-                Ok(member) => member,
-                Err(e) => {
-                    warn!("Could not get member from thread member: {e}");
-                    return false;
-                }
-            }
-        }
-    };
-
-    member
-        .roles
-        .iter()
-        .any(|role_id| *role_id == SUPPORT_ROLE_ID)
 }
