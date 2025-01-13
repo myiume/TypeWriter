@@ -1,7 +1,7 @@
 use crate::{
     check_is_support,
     clickup::{create_task_in_clickup, TaskPriority, TaskSize, TaskType},
-    Context, WinstonError,
+    remove_support_members_from_thread, Context, WinstonError,
 };
 use poise::{
     serenity_prelude::{CreateEmbed, CreateMessage},
@@ -78,6 +78,10 @@ pub async fn create_task(
                 ),
         )
         .await?;
+
+    if let Err(e) = remove_support_members_from_thread(&ctx, channel).await {
+        eprintln!("Could not remove members from thread: {e}");
+    }
 
     Ok(())
 }

@@ -124,8 +124,10 @@ async fn startup_webhook() {
 
 async fn startup_discord_bot() {
     let discord_token = std::env::var("DISCORD_TOKEN").expect("missing DISCORD_TOKEN");
-    let intents =
-        GatewayIntents::MESSAGE_CONTENT | GatewayIntents::GUILD_MESSAGES | GatewayIntents::GUILDS;
+    let intents = GatewayIntents::MESSAGE_CONTENT
+        | GatewayIntents::GUILD_MESSAGES
+        | GatewayIntents::GUILDS
+        | GatewayIntents::GUILD_MEMBERS;
 
     let framework = poise::Framework::builder()
         .options(poise::FrameworkOptions {

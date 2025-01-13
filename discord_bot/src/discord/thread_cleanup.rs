@@ -6,8 +6,8 @@ use poise::serenity_prelude::{
 };
 
 use crate::{
-    get_discord, webhooks::GetTagId, CloseReason, WinstonError, GUILD_ID, QUESTIONS_CHANNEL,
-    QUESTIONS_FORUM_ID,
+    get_discord, remove_support_members_from_thread, webhooks::GetTagId, CloseReason, WinstonError,
+    GUILD_ID, QUESTIONS_CHANNEL, QUESTIONS_FORUM_ID,
 };
 
 pub async fn cleanup_threads() -> Result<(), WinstonError> {
@@ -143,6 +143,10 @@ async fn resolve_answered_thread(
 
         )
         .await?;
+
+    if let Err(e) = remove_support_members_from_thread(&discord, thread.id).await {
+        eprintln!("Could not remove members from thread: {e}");
+    }
 
     Ok(())
 }
