@@ -1,4 +1,4 @@
-package com.typewritermc.worldguard
+package com.typewritermc.worldguard.events
 
 import com.sk89q.worldguard.protection.regions.ProtectedRegion
 import org.bukkit.entity.Player

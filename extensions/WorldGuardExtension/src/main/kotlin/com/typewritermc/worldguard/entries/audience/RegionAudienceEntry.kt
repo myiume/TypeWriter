@@ -10,8 +10,8 @@ import com.typewritermc.engine.paper.entry.entries.AudienceEntry
 import com.typewritermc.engine.paper.entry.entries.AudienceFilter
 import com.typewritermc.engine.paper.entry.entries.AudienceFilterEntry
 import com.typewritermc.engine.paper.entry.entries.Invertible
-import com.typewritermc.worldguard.RegionsEnterEvent
-import com.typewritermc.worldguard.RegionsExitEvent
+import com.typewritermc.worldguard.events.RegionsEnterEvent
+import com.typewritermc.worldguard.events.RegionsExitEvent
 import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
 

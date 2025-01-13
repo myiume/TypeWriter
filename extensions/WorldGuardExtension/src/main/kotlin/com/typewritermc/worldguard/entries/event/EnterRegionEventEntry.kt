@@ -10,8 +10,7 @@ import com.typewritermc.core.interaction.context
 import com.typewritermc.engine.paper.entry.TriggerableEntry
 import com.typewritermc.engine.paper.entry.entries.EventEntry
 import com.typewritermc.engine.paper.entry.triggerAllFor
-import com.typewritermc.worldguard.RegionsEnterEvent
-import lirand.api.extensions.server.server
+import com.typewritermc.worldguard.events.RegionsEnterEvent
 
 @Entry("on_enter_region", "When a player enters a WorldGuard region", Colors.YELLOW, "fa6-solid:door-open")
 /**
