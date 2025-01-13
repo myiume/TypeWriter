@@ -1,6 +1,10 @@
 use async_trait::async_trait;
+use chrono::Utc;
 use poise::{
-    serenity_prelude::{Context, EditThread, EventHandler, GuildChannel, Message},
+    serenity_prelude::{
+        Colour, Context, CreateAllowedMentions, CreateEmbed, CreateMessage, EditThread,
+        EventHandler, GuildChannel, Mentionable, Message, Timestamp,
+    },
     CreateReply,
 };
 
@@ -56,6 +60,56 @@ impl EventHandler for SupportAnsweringHandler {
             )
             .await
             .ok();
+
+        let Some(owner_id) = thread.owner_id else {
+            return;
+        };
+
+        let embed = CreateEmbed::default()
+                   .title("Support & Suggestions 🎫")
+                   .description(format!("Hello {}! Whether you're seeking help or suggesting improvements, we're here to listen.", owner_id.mention()))
+                   .field(
+                       "For Support Tickets:",
+                       "• The more details you provide, the faster we can help\n\
+                        • Upload your `logs/latest.log` to [McLogs](https://mclo.gs/) - even with no errors, this helps with context\n\
+                        • Detail the steps to reproduce the issue",
+                       false
+                   )
+                   .field(
+                       "For Suggestions:",
+                       "• Explain the problem your suggestion solves\n\
+                        • Describe how it would benefit other users\n\
+                        • Consider potential downsides or conflicts",
+                       false
+                   )
+                   .timestamp(chrono::Utc::now())
+                   .colour(Colour::BLUE);
+
+        let message = CreateMessage::default()
+            .content(format!("{}", SUPPORT_ROLE_ID.mention()))
+            .embed(embed);
+
+        let Some(last_message_id) = thread.last_message_id else {
+            thread.send_message(&ctx, message).await.ok();
+            return;
+        };
+
+        let Ok(last_message) = thread.message(&ctx, last_message_id).await else {
+            thread.send_message(&ctx, message).await.ok();
+            return;
+        };
+
+        let allowed_mentions = CreateAllowedMentions::new()
+            .replied_user(true)
+            .everyone(true)
+            .all_users(true)
+            .all_roles(true);
+
+        let message = message
+            .reference_message(&last_message)
+            .allowed_mentions(allowed_mentions);
+
+        thread.send_message(&ctx, message).await.ok();
     }
 
     async fn message(&self, ctx: Context, new_message: Message) {
