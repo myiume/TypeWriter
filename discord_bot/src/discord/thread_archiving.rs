@@ -1,4 +1,5 @@
 use async_trait::async_trait;
+use log::warn;
 use poise::serenity_prelude::{Context, EditThread, EventHandler, GuildChannel};
 
 use crate::{CloseReason, QUESTIONS_FORUM_ID};
@@ -30,7 +31,7 @@ impl EventHandler for ThreadArchivingHandler {
         let parent = match parent.to_channel(&ctx).await {
             Ok(parent) => parent,
             Err(e) => {
-                eprintln!("Error getting parent channel: {}", e);
+                warn!("Error getting parent channel: {}", e);
                 return;
             }
         };
@@ -64,7 +65,7 @@ impl EventHandler for ThreadArchivingHandler {
             .edit_thread(&ctx, EditThread::default().archived(has_close_tag))
             .await
         {
-            eprintln!("Error editing thread: {}", e);
+            warn!("Error editing thread: {}", e);
             return;
         }
     }

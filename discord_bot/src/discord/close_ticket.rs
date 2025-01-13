@@ -1,6 +1,7 @@
 use std::fmt::{self, Display, Formatter};
 
 use indoc::formatdoc;
+use log::{debug, warn};
 use poise::{
     serenity_prelude::{
         ButtonStyle, CacheHttp, ChannelId, CreateButton, CreateEmbed, CreateEmbedFooter,
@@ -141,7 +142,7 @@ pub async fn close_ticket(
     channel.send_message(&ctx, message).await?;
 
     if let Err(e) = remove_support_members_from_thread(&ctx, channel.id).await {
-        eprintln!("Could not remove members from thread: {e}");
+        warn!("Could not remove members from thread: {e}");
     }
 
     channel
@@ -181,8 +182,10 @@ where
             continue;
         }
 
+        debug!("Removing member from thread: {user_id}");
+
         if let Err(e) = channel_id.remove_thread_member(&ctx, user_id).await {
-            eprintln!("Could not remove member from thread: {e}");
+            warn!("Could not remove member from thread: {e}");
         }
     }
 
@@ -194,13 +197,14 @@ async fn is_support(ctx: &impl CacheHttp, thread_member: ThreadMember) -> bool {
         Some(member) => member,
         None => {
             let Some(guild_id) = thread_member.guild_id else {
+                warn!("Could not get guild from thread member");
                 return false;
             };
 
             let guild = match guild_id.to_partial_guild(&ctx).await {
                 Ok(guild) => guild,
                 Err(e) => {
-                    eprintln!("Could not get guild from thread member: {e}");
+                    warn!("Could not get guild from thread member: {e}");
                     return false;
                 }
             };
@@ -208,7 +212,7 @@ async fn is_support(ctx: &impl CacheHttp, thread_member: ThreadMember) -> bool {
             match guild.member(ctx, thread_member.user_id).await {
                 Ok(member) => member,
                 Err(e) => {
-                    eprintln!("Could not get member from thread member: {e}");
+                    warn!("Could not get member from thread member: {e}");
                     return false;
                 }
             }

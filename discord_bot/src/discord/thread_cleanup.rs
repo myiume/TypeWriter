@@ -1,5 +1,6 @@
 use chrono::Duration;
 use indoc::formatdoc;
+use log::{info, warn};
 use poise::serenity_prelude::{
     model::channel, ButtonStyle, Context, CreateButton, CreateEmbed, CreateMessage, EditThread,
     ForumTag, ForumTagId, Mentionable, ReactionType, Timestamp,
@@ -82,7 +83,7 @@ async fn archive_thread(
         return Ok(());
     }
 
-    println!("Archiving thread {} ({})", thread.id, thread.name());
+    info!("Archiving thread {} ({})", thread.id, thread.name());
 
     thread
         .edit_thread(&discord, EditThread::default().archived(true))
@@ -107,7 +108,7 @@ async fn resolve_answered_thread(
         return Ok(());
     }
 
-    println!("Auto Resolving thread {} ({})", thread.id, thread.name());
+    info!("Auto Resolving thread {} ({})", thread.id, thread.name());
 
     // Close the thread
     let Some(resolved_tag) = available_tags.get_tag_id("resolved") else {
@@ -145,7 +146,7 @@ async fn resolve_answered_thread(
         .await?;
 
     if let Err(e) = remove_support_members_from_thread(&discord, thread.id).await {
-        eprintln!("Could not remove members from thread: {e}");
+        warn!("Could not remove members from thread: {e}");
     }
 
     Ok(())
@@ -166,7 +167,7 @@ async fn reask_verification(
         return Ok(());
     }
 
-    println!(
+    info!(
         "Reasking verification for thread {} ({})",
         thread.id,
         thread.name()

@@ -1,4 +1,5 @@
 use crate::{webhook::TaskTag, WinstonError, CLIENT};
+use log::warn;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use strum::IntoEnumIterator;
@@ -23,8 +24,8 @@ pub async fn get_task_from_clickup(task_id: &str) -> Result<Task, WinstonError> 
     match serde_json::from_str::<Task>(&text) {
         Ok(task) => Ok(task),
         Err(e) => {
-            eprintln!("failed to deserialize task: {}", e);
-            eprintln!("response: {}", text);
+            warn!("failed to deserialize task: {}", e);
+            warn!("response: {}", text);
             Err(WinstonError::ParseJson(e))
         }
     }

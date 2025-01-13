@@ -1,3 +1,4 @@
+use log::warn;
 use url::Url;
 
 use crate::{WinstonError, CLICKUP_LIST_ID, CLIENT};
@@ -47,8 +48,8 @@ pub async fn get_tasks(query: TasksQuery) -> Result<TaskListings, WinstonError> 
     match serde_json::from_str::<TaskListings>(&text) {
         Ok(tasks) => Ok(tasks),
         Err(e) => {
-            eprintln!("failed to deserialize task: {}", e);
-            eprintln!("response: {}", text);
+            warn!("failed to deserialize task: {}", e);
+            warn!("response: {}", text);
             Err(WinstonError::ParseJson(e))
         }
     }

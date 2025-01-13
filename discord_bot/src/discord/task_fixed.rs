@@ -1,6 +1,7 @@
 use async_trait::async_trait;
 use indoc::formatdoc;
 use itertools::Itertools;
+use log::warn;
 use poise::serenity_prelude::{
     ComponentInteraction, Context, EditInteractionResponse, EditMessage, EventHandler,
     GuildChannel, Interaction, UserId,
@@ -29,7 +30,7 @@ impl EventHandler for TaskFixedHandler {
         }
 
         if let Err(err) = component.defer_ephemeral(&ctx).await {
-            eprintln!("Failed to defer ephemeral: {}", err);
+            warn!("Failed to defer ephemeral: {}", err);
             return;
         }
 
@@ -41,7 +42,7 @@ impl EventHandler for TaskFixedHandler {
                 "Something whent wrong with the button. It seems to be outdated.",
             )
             .await;
-            eprintln!("Invalid custom_id: {}", custom_id);
+            warn!("Invalid custom_id: {}", custom_id);
             return;
         }
         let task_status = split[1].to_string();
@@ -71,7 +72,7 @@ impl EventHandler for TaskFixedHandler {
                     "Something whent wrong with the button. It seems to be outdated.",
                 )
                 .await;
-                eprintln!("Invalid task status: {}", task_status);
+                warn!("Invalid task status: {}", task_status);
                 return;
             }
         };
@@ -83,7 +84,7 @@ impl EventHandler for TaskFixedHandler {
                 format!("Failed to mark task as {}: {}", task_status, e),
             )
             .await;
-            eprintln!("Failed to mark task as {}: {}", task_status, e);
+            warn!("Failed to mark task as {}: {}", task_status, e);
             return;
         }
     }
@@ -197,7 +198,7 @@ pub async fn update_response(
         .await;
 
     if let Err(e) = result {
-        eprintln!("Failed to update response: {}", e);
+        warn!("Failed to update response: {}", e);
     }
 }
 
@@ -212,7 +213,7 @@ pub async fn check_permissions(
             "Something whent wrong with the button. It seems to be outdated.",
         )
         .await;
-        eprintln!("No channel found");
+        warn!("No channel found");
         return None;
     };
 
@@ -223,7 +224,7 @@ pub async fn check_permissions(
             "Something whent wrong with the button. It seems to be outdated.",
         )
         .await;
-        eprintln!("No guild channel found");
+        warn!("No guild channel found");
         return None;
     };
 
@@ -234,7 +235,7 @@ pub async fn check_permissions(
             "Something whent wrong with the button. It seems to be outdated.",
         )
         .await;
-        eprintln!("No owner found for channel: {}", guild_channel.name());
+        warn!("No owner found for channel: {}", guild_channel.name());
         return None;
     };
 

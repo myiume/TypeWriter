@@ -1,5 +1,6 @@
 use async_trait::async_trait;
 use chrono::Utc;
+use log::{info, warn};
 use poise::{
     serenity_prelude::{
         Colour, Context, CreateAllowedMentions, CreateEmbed, CreateMessage, EditThread,
@@ -30,7 +31,7 @@ impl EventHandler for SupportAnsweringHandler {
         let parent = match parent.to_channel(&ctx).await {
             Ok(parent) => parent,
             Err(e) => {
-                eprintln!("Error getting parent channel: {}", e);
+                warn!("Error getting parent channel: {}", e);
                 return;
             }
         };
@@ -45,12 +46,12 @@ impl EventHandler for SupportAnsweringHandler {
 
         let available_tags = parent.available_tags;
         let Some(support_tag) = available_tags.get_tag_id("support") else {
-            eprintln!("Support tag not found in available tags");
+            warn!("Support tag not found in available tags");
             return;
         };
 
         let Some(pending_tag) = available_tags.get_tag_id("pending") else {
-            eprintln!("Pending tag not found in available tags");
+            warn!("Pending tag not found in available tags");
             return;
         };
         thread
@@ -133,7 +134,7 @@ impl EventHandler for SupportAnsweringHandler {
         let parent = match parent.to_channel(&ctx).await {
             Ok(parent) => parent,
             Err(e) => {
-                eprintln!("Error getting parent channel: {}", e);
+                warn!("Error getting parent channel: {}", e);
                 return;
             }
         };
@@ -148,7 +149,7 @@ impl EventHandler for SupportAnsweringHandler {
 
         let available_tags = parent.available_tags;
         let Some(support_tag) = available_tags.get_tag_id("support") else {
-            eprintln!("Support tag not found in available tags");
+            warn!("Support tag not found in available tags");
             return;
         };
 
@@ -157,12 +158,12 @@ impl EventHandler for SupportAnsweringHandler {
         }
 
         let Some(answered_tag) = available_tags.get_tag_id("answered") else {
-            eprintln!("Answered tag not found in available tags");
+            warn!("Answered tag not found in available tags");
             return;
         };
 
         let Some(pending_tag) = available_tags.get_tag_id("pending") else {
-            eprintln!("Pending tag not found in available tags");
+            warn!("Pending tag not found in available tags");
             return;
         };
 
@@ -174,12 +175,12 @@ impl EventHandler for SupportAnsweringHandler {
             Ok(true) => true,
             Ok(false) => false,
             Err(e) => {
-                eprintln!("Error while handling error: {}", e);
+                warn!("Error while handling error: {}", e);
                 return;
             }
         };
 
-        println!(
+        info!(
             "Marking thread {} ({}) as {}",
             thread.id,
             thread.name(),
@@ -232,7 +233,7 @@ pub async fn support_answering(
 
     // Check if the ticket has the support tag
     let Some(support_tag) = available_tags.get_tag_id("support") else {
-        eprintln!("Support tag not found in available tags");
+        warn!("Support tag not found in available tags");
         return Err(WinstonError::TagNotFound("support".to_string()));
     };
 
@@ -251,7 +252,7 @@ pub async fn support_answering(
 
     let target_tag_name = if answered { "answered" } else { "pending" };
     let Some(target_tag) = available_tags.get_tag_id(target_tag_name) else {
-        eprintln!("Target tag not found in available tags");
+        warn!("Target tag not found in available tags");
         return Err(WinstonError::TagNotFound(target_tag_name.to_string()));
     };
 
