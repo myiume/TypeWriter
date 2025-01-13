@@ -4,6 +4,7 @@ import com.destroystokyo.paper.event.player.PlayerJumpEvent
 import com.typewritermc.engine.paper.plugin
 import com.typewritermc.engine.paper.utils.config
 import com.typewritermc.engine.paper.utils.reloadable
+import lirand.api.extensions.events.unregister
 import lirand.api.extensions.server.server
 import org.bukkit.NamespacedKey
 import org.bukkit.attribute.Attribute
@@ -11,7 +12,6 @@ import org.bukkit.attribute.AttributeModifier
 import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
 import org.bukkit.event.EventPriority
-import org.bukkit.event.HandlerList.unregisterAll
 import org.bukkit.event.Listener
 import org.bukkit.event.player.PlayerSwapHandItemsEvent
 import org.bukkit.event.player.PlayerToggleSneakEvent
@@ -63,7 +63,7 @@ sealed interface ConfirmationKeyHandler : Listener {
     }
 
     fun dispose() {
-        unregisterAll()
+        unregister()
     }
 }
 
