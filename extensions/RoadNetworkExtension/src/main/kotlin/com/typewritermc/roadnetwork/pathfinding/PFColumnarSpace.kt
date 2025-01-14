@@ -12,7 +12,7 @@ class PFColumnarSpace(
     private val snapshot: ChunkSnapshot,
     private val instance: IInstanceSpace,
 ) : IColumnarSpace {
-    private val occlusionFieldList = ColumnarOcclusionFieldList(this)
+    private val occlusionFieldList = ColumnarOcclusionFieldList(this, world.minHeight, world.maxHeight)
     private var lastAccess = System.currentTimeMillis()
 
     override fun blockAt(x: Int, y: Int, z: Int): PFBlock {

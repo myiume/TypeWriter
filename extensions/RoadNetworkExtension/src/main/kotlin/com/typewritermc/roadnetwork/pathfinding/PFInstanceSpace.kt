@@ -26,6 +26,8 @@ import java.util.concurrent.ConcurrentHashMap
 class PFInstanceSpace(val world: com.typewritermc.core.utils.point.World) : IInstanceSpace {
     private val chunkSpaces = Long2ObjectOpenHashMap<PFColumnarSpace>()
     private var lastAccess = System.currentTimeMillis()
+    private val minY: Int = world.minHeight
+    private val maxY: Int = world.maxHeight
 
     override fun blockObjectAt(x: Int, y: Int, z: Int): IBlockObject {
         val chunkX = x shr 4
@@ -33,7 +35,7 @@ class PFInstanceSpace(val world: com.typewritermc.core.utils.point.World) : IIns
 
         val columnarSpace = columnarSpaceAt(chunkX, chunkZ)
         val relativeX = x and 15
-        val relativeY = y and 15
+        val relativeY = y - minY
         val relativeZ = z and 15
         return columnarSpace.blockAt(relativeX, relativeY, relativeZ)
     }
