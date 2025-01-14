@@ -327,15 +327,20 @@ fun CommandArguments.targetOrSelfPlayer(commandSender: CommandSender): Player? {
 
 fun Argument<*>.optionalTarget(block: Argument<*>.() -> Unit) = playerArgument("target", optional = true, block)
 
-inline fun <reified E : Entry> entryArgument(name: String): Argument<E> = CustomArgument(StringArgument(name)) { info ->
-    Query.findById(E::class, info.input)
-        ?: Query.findByName(E::class, info.input)
-        ?: throw CustomArgumentException.fromMessageBuilder(MessageBuilder("Could not find entry: ").appendArgInput())
-}.replaceSuggestions(ArgumentSuggestions.stringsWithTooltips { _ ->
-    Query.find<E>().map {
-        StringTooltip.ofString(it.name, it.id)
-    }.toList().toTypedArray()
-})
+inline fun <reified E : Entry> entryArgument(name: String): Argument<E> = entryArgument(name, E::class)
+
+fun <E : Entry> entryArgument(name: String, klass: KClass<E>): Argument<E> {
+    return CustomArgument(StringArgument(name)) { info ->
+        Query.findById(klass, info.input)
+            ?: Query.findByName(klass, info.input)
+            ?: throw CustomArgumentException.fromMessageBuilder(MessageBuilder("Could not find entry: ").appendArgInput())
+    }.replaceSuggestions(ArgumentSuggestions.stringsWithTooltips { _ ->
+        Query.find(klass).map {
+            StringTooltip.ofString(it.name, it.id)
+        }.toList().toTypedArray()
+    })
+}
+
 
 fun pages(name: String, type: PageType): Argument<Page> = CustomArgument(StringArgument(name)) { info ->
     val pages = Query.findPagesOfType(type).toList()

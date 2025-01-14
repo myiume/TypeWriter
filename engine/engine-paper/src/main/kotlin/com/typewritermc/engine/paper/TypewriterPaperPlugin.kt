@@ -36,6 +36,7 @@ import com.typewritermc.engine.paper.utils.registerAll
 import com.typewritermc.engine.paper.utils.unregisterAll
 import com.typewritermc.loader.DependencyChecker
 import dev.jorel.commandapi.CommandAPI
+import dev.jorel.commandapi.CommandAPIBukkit
 import dev.jorel.commandapi.CommandAPIBukkitConfig
 import kotlinx.coroutines.delay
 import lirand.api.architecture.KotlinPlugin
@@ -187,8 +188,8 @@ class TypewriterPaperPlugin : KotlinPlugin(), KoinComponent {
         TypewriterUnloadEvent().callEvent()
 
         if (CommandAPI.isLoaded()) {
-            CommandAPI.unregister("typewriter")
             CustomCommandEntry.unregisterAll()
+            CommandAPI.unregister("typewriter", true)
         }
 
         get<PacketInterceptor>().unload()
