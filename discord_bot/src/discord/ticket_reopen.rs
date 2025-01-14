@@ -1,11 +1,12 @@
 use async_trait::async_trait;
 use indoc::formatdoc;
+use log::warn;
 use poise::serenity_prelude::{
     ComponentInteraction, Context, CreateEmbed, CreateInteractionResponseFollowup, CreateMessage,
     CreateQuickModal, EditThread, EventHandler, Interaction, Timestamp,
 };
 
-use crate::{check_permissions, webhooks::GetTagId, SUPPORT_ROLE_ID, QUESTIONS_FORUM_ID};
+use crate::{check_permissions, webhooks::GetTagId, QUESTIONS_FORUM_ID, SUPPORT_ROLE_ID};
 
 pub struct TicketReopenHandler;
 
@@ -36,7 +37,7 @@ impl EventHandler for TicketReopenHandler {
             Ok(Some(responds)) if responds.inputs.len() > 0 => responds,
             Err(err) => {
                 send_followup(&ctx, &component, "Failed to open modal").await;
-                eprintln!("Failed to open modal: {}", err);
+                warn!("Failed to open modal: {}", err);
                 return;
             }
             _ => {
@@ -58,7 +59,7 @@ impl EventHandler for TicketReopenHandler {
             )
             .await
         {
-            eprintln!("Failed to acknowledge interaction: {}", e);
+            warn!("Failed to acknowledge interaction: {}", e);
             return;
         }
 
@@ -70,7 +71,7 @@ impl EventHandler for TicketReopenHandler {
         let parent = match parent.to_channel(&ctx).await {
             Ok(parent) => parent,
             Err(e) => {
-                eprintln!("Error getting parent channel: {}", e);
+                warn!("Error getting parent channel: {}", e);
                 return;
             }
         };
@@ -86,12 +87,12 @@ impl EventHandler for TicketReopenHandler {
         let available_tags = parent.available_tags;
 
         let Some(support_tag) = available_tags.get_tag_id("support") else {
-            eprintln!("Support tag not found in available tags");
+            warn!("Support tag not found in available tags");
             return;
         };
 
         let Some(pending_tag) = available_tags.get_tag_id("pending") else {
-            eprintln!("Pending tag not found in available tags");
+            warn!("Pending tag not found in available tags");
             return;
         };
 
@@ -106,7 +107,7 @@ impl EventHandler for TicketReopenHandler {
             .await
         {
             send_followup(&ctx, &component, "Failed to reopen ticket").await;
-            eprintln!("Failed to edit thread: {}", e);
+            warn!("Failed to edit thread: {}", e);
             return;
         }
 
@@ -133,13 +134,13 @@ impl EventHandler for TicketReopenHandler {
             .await
         {
             send_followup(&ctx, &component, "Failed to reopen ticket").await;
-            eprintln!("Failed to send new message: {}", e);
+            warn!("Failed to send new message: {}", e);
             return;
         }
 
         if let Err(e) = component.message.delete(&ctx).await {
             send_followup(&ctx, &component, "Failed to reopen ticket").await;
-            eprintln!("Failed to delete old message: {}", e);
+            warn!("Failed to delete old message: {}", e);
             return;
         }
     }
@@ -155,6 +156,6 @@ async fn send_followup(ctx: &Context, interaction: &ComponentInteraction, conten
         )
         .await
     {
-        eprintln!("Failed to send followup: {}", e);
+        warn!("Failed to send followup: {}", e);
     }
 }

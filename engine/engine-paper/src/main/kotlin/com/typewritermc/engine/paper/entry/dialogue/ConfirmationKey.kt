@@ -4,21 +4,17 @@ import com.destroystokyo.paper.event.player.PlayerJumpEvent
 import com.typewritermc.engine.paper.plugin
 import com.typewritermc.engine.paper.utils.config
 import com.typewritermc.engine.paper.utils.reloadable
-import lirand.api.extensions.events.listen
+import lirand.api.extensions.events.unregister
 import lirand.api.extensions.server.server
 import org.bukkit.NamespacedKey
 import org.bukkit.attribute.Attribute
 import org.bukkit.attribute.AttributeModifier
 import org.bukkit.entity.Player
-import org.bukkit.event.Cancellable
 import org.bukkit.event.EventHandler
 import org.bukkit.event.EventPriority
-import org.bukkit.event.HandlerList.unregisterAll
 import org.bukkit.event.Listener
-import org.bukkit.event.player.PlayerEvent
 import org.bukkit.event.player.PlayerSwapHandItemsEvent
 import org.bukkit.event.player.PlayerToggleSneakEvent
-import java.util.*
 
 private val confirmationKeyString by config(
     "confirmationKey", ConfirmationKey.SWAP_HANDS.name, comment = """
@@ -67,7 +63,7 @@ sealed interface ConfirmationKeyHandler : Listener {
     }
 
     fun dispose() {
-        unregisterAll()
+        unregister()
     }
 }
 
@@ -85,12 +81,15 @@ class JumpHandler(override val player: Player, override val block: () -> Unit) :
 
     override fun initialize() {
         super.initialize()
-        player.getAttribute(Attribute.JUMP_STRENGTH)?.addModifier(AttributeModifier(key, -1.0, AttributeModifier.Operation.MULTIPLY_SCALAR_1))
+        player.getAttribute(Attribute.JUMP_STRENGTH)?.let { attribute ->
+            attribute.removeModifier(key)
+            attribute.addModifier(AttributeModifier(key, -0.999, AttributeModifier.Operation.MULTIPLY_SCALAR_1))
+        }
     }
+
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     fun onJump(event: PlayerJumpEvent) {
         if (event.player.uniqueId != player.uniqueId) return
-        event.isCancelled = true
         block()
     }
 

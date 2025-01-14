@@ -11,6 +11,7 @@ import com.typewritermc.engine.paper.entry.TriggerableEntry
 import com.typewritermc.engine.paper.entry.matches
 import dev.jorel.commandapi.CommandTree
 import org.bukkit.entity.Player
+import kotlin.reflect.KClass
 
 @Tags("event")
 interface EventEntry : TriggerEntry

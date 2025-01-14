@@ -1,13 +1,14 @@
 use chrono::Duration;
 use indoc::formatdoc;
+use log::{info, warn};
 use poise::serenity_prelude::{
     model::channel, ButtonStyle, Context, CreateButton, CreateEmbed, CreateMessage, EditThread,
     ForumTag, ForumTagId, Mentionable, ReactionType, Timestamp,
 };
 
 use crate::{
-    get_discord, webhooks::GetTagId, CloseReason, WinstonError, GUILD_ID, QUESTIONS_CHANNEL,
-    QUESTIONS_FORUM_ID,
+    get_discord, remove_support_members_from_thread, webhooks::GetTagId, CloseReason, WinstonError,
+    GUILD_ID, QUESTIONS_CHANNEL, QUESTIONS_FORUM_ID,
 };
 
 pub async fn cleanup_threads() -> Result<(), WinstonError> {
@@ -78,11 +79,11 @@ async fn archive_thread(
     let now = Timestamp::now();
     let duration = now.timestamp() - last_message_date.timestamp();
 
-    if duration < Duration::days(3).num_seconds() {
+    if duration < Duration::days(2).num_seconds() {
         return Ok(());
     }
 
-    println!("Archiving thread {} ({})", thread.id, thread.name());
+    info!("Archiving thread {} ({})", thread.id, thread.name());
 
     thread
         .edit_thread(&discord, EditThread::default().archived(true))
@@ -107,7 +108,7 @@ async fn resolve_answered_thread(
         return Ok(());
     }
 
-    println!("Auto Resolving thread {} ({})", thread.id, thread.name());
+    info!("Auto Resolving thread {} ({})", thread.id, thread.name());
 
     // Close the thread
     let Some(resolved_tag) = available_tags.get_tag_id("resolved") else {
@@ -144,6 +145,10 @@ async fn resolve_answered_thread(
         )
         .await?;
 
+    if let Err(e) = remove_support_members_from_thread(&discord, thread.id).await {
+        warn!("Could not remove members from thread: {e}");
+    }
+
     Ok(())
 }
 
@@ -162,7 +167,7 @@ async fn reask_verification(
         return Ok(());
     }
 
-    println!(
+    info!(
         "Reasking verification for thread {} ({})",
         thread.id,
         thread.name()

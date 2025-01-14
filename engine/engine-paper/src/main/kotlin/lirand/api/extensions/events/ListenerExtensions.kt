@@ -7,6 +7,7 @@ import org.bukkit.event.HandlerList
 import org.bukkit.event.Listener
 import org.bukkit.plugin.Plugin
 import kotlin.reflect.KClass
+import kotlin.reflect.cast
 
 data class ListenerWithPlugin(val listener: Listener, val plugin: Plugin)
 
@@ -39,8 +40,10 @@ fun <T : Event> Listener.listen(
 	this,
 	priority,
 	{ _, event ->
-		if (type.isInstance(event))
-			(event as? T)?.let { block(it) }
+		if (!type.isInstance(event)) {
+			return@registerEvent
+		}
+		type.cast(event).let(block)
 	},
 	plugin,
 	ignoreCancelled

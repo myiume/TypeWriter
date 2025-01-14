@@ -1,15 +1,16 @@
 use std::fmt::{self, Display, Formatter};
 
 use indoc::formatdoc;
+use log::{debug, warn};
 use poise::{
     serenity_prelude::{
-        ButtonStyle, CreateButton, CreateEmbed, CreateEmbedFooter, CreateMessage, EditThread,
-        ForumTag, Mentionable, ReactionType, Timestamp,
+        ButtonStyle, CacheHttp, ChannelId, CreateButton, CreateEmbed, CreateEmbedFooter,
+        CreateMessage, EditThread, ForumTag, Http, Mentionable, ReactionType, Timestamp,
     },
     CreateReply, ReplyHandle,
 };
 
-use crate::{check_is_support, webhooks::GetTagId, Context, WinstonError};
+use crate::{check_is_support, webhooks::GetTagId, Context, WinstonError, SUPPORT_ROLE_ID};
 
 #[derive(Debug, poise::ChoiceParameter)]
 pub enum CloseReason {
@@ -139,6 +140,10 @@ pub async fn close_ticket(
 
     channel.send_message(&ctx, message).await?;
 
+    if let Err(e) = remove_support_members_from_thread(&ctx, channel.id).await {
+        warn!("Could not remove members from thread: {e}");
+    }
+
     channel
         .edit_thread(
             ctx,
@@ -159,6 +164,40 @@ async fn update_responds(
     handle
         .edit(ctx, CreateReply::default().content(message))
         .await?;
+
+    Ok(())
+}
+
+pub async fn remove_support_members_from_thread<C>(
+    ctx: &C,
+    channel_id: ChannelId,
+) -> Result<(), WinstonError>
+where
+    C: CacheHttp + AsRef<Http>,
+{
+    let channel = channel_id.to_channel(&ctx).await?;
+    let guild_channel = channel.guild().ok_or(WinstonError::NotAGuildChannel)?;
+    let guild_id = guild_channel.guild_id;
+
+    for thread_member in channel_id.get_thread_members(&ctx).await? {
+        let member = guild_id.member(&ctx, thread_member.user_id).await?;
+        if !member
+            .roles
+            .iter()
+            .any(|role_id| *role_id == SUPPORT_ROLE_ID)
+        {
+            continue;
+        }
+
+        debug!("Removing member from thread: {}", member);
+
+        if let Err(e) = channel_id
+            .remove_thread_member(&ctx, thread_member.user_id)
+            .await
+        {
+            warn!("Could not remove member from thread: {e}");
+        }
+    }
 
     Ok(())
 }

@@ -1,3 +1,5 @@
+use log::info;
+
 use crate::WinstonError;
 
 use super::{get_tasks, update_task, TaskStatus, TasksQuery, UpdateTask};
@@ -8,7 +10,7 @@ pub async fn move_done_to_beta() -> Result<(), WinstonError> {
     })
     .await?;
 
-    println!(
+    info!(
         "Moving tasks to beta: {}",
         tasks
             .tasks

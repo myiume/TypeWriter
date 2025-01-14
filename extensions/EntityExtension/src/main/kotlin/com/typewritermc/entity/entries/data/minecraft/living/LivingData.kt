@@ -9,6 +9,7 @@ fun applyLivingEntityData(entity: WrapperEntity, property: EntityProperty): Bool
     when (property) {
         is EquipmentProperty -> applyEquipmentData(entity, property)
         is ScaleProperty -> applyScaleData(entity, property)
+        is DamagedProperty -> applyDamagedData(entity, property)
         else -> return false
     }
 

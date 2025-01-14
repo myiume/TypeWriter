@@ -1,5 +1,6 @@
 use actix_web::{web::Bytes, HttpRequest, HttpResponse, Responder};
 use hmac::{Hmac, Mac};
+use log::{debug, info, warn};
 use serde::{Deserialize, Serialize};
 use sha2::Sha256;
 
@@ -29,10 +30,12 @@ pub async fn publish_beta_version(req: HttpRequest) -> impl Responder {
         return HttpResponse::Unauthorized().body("invalid signature");
     }
 
+    info!("Received publish beta request");
+
     match move_done_to_beta().await {
         Ok(_) => HttpResponse::Ok().body("ok"),
         Err(e) => {
-            eprintln!("failed to move tasks to beta: {}", e);
+            warn!("failed to move tasks to beta: {}", e);
             HttpResponse::InternalServerError().body(format!("failed to move tasks to beta: {}", e))
         }
     }
@@ -61,13 +64,13 @@ pub async fn clickup_webhook(req: HttpRequest, bytes: Bytes) -> impl Responder {
     };
 
     let Ok(signature) = hex::decode(new_signature.trim()) else {
-        eprintln!("failed to decode signature");
+        warn!("failed to decode signature");
         return HttpResponse::BadRequest()
             .body("failed to decode signature")
             .into();
     };
     if let Err(_) = mac.verify_slice(&signature) {
-        eprintln!("invalid signature: {:?}", signature);
+        warn!("invalid signature: {:?}", signature);
         return HttpResponse::Unauthorized()
             .body("invalid signature")
             .into();
@@ -75,7 +78,7 @@ pub async fn clickup_webhook(req: HttpRequest, bytes: Bytes) -> impl Responder {
 
     let event: Event = serde_json::from_slice(&bytes).expect("failed to deserialize event");
 
-    println!("Received Event: {:?}", event);
+    debug!("Received Event: {:?}", event);
 
     let result = match event {
         Event::TaskCreated(e) => crate::webhooks::handle_task_created(e).await,
@@ -85,7 +88,7 @@ pub async fn clickup_webhook(req: HttpRequest, bytes: Bytes) -> impl Responder {
     };
 
     if let Err(e) = result {
-        eprintln!("failed to handle event: {}", e);
+        warn!("failed to handle event: {}", e);
         return HttpResponse::InternalServerError()
             .body(format!("failed to handle event: {}", e))
             .into();

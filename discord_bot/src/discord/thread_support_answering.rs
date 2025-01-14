@@ -1,6 +1,11 @@
 use async_trait::async_trait;
+use chrono::Utc;
+use log::{info, warn};
 use poise::{
-    serenity_prelude::{Context, EditThread, EventHandler, GuildChannel, Message},
+    serenity_prelude::{
+        Colour, Context, CreateAllowedMentions, CreateEmbed, CreateMessage, EditThread,
+        EventHandler, GuildChannel, Mentionable, Message, Timestamp,
+    },
     CreateReply,
 };
 
@@ -26,7 +31,7 @@ impl EventHandler for SupportAnsweringHandler {
         let parent = match parent.to_channel(&ctx).await {
             Ok(parent) => parent,
             Err(e) => {
-                eprintln!("Error getting parent channel: {}", e);
+                warn!("Error getting parent channel: {}", e);
                 return;
             }
         };
@@ -41,12 +46,12 @@ impl EventHandler for SupportAnsweringHandler {
 
         let available_tags = parent.available_tags;
         let Some(support_tag) = available_tags.get_tag_id("support") else {
-            eprintln!("Support tag not found in available tags");
+            warn!("Support tag not found in available tags");
             return;
         };
 
         let Some(pending_tag) = available_tags.get_tag_id("pending") else {
-            eprintln!("Pending tag not found in available tags");
+            warn!("Pending tag not found in available tags");
             return;
         };
         thread
@@ -56,6 +61,56 @@ impl EventHandler for SupportAnsweringHandler {
             )
             .await
             .ok();
+
+        let Some(owner_id) = thread.owner_id else {
+            return;
+        };
+
+        let embed = CreateEmbed::default()
+                   .title("Support & Suggestions 🎫")
+                   .description(format!("Hello {}! Whether you're seeking help or suggesting improvements, we're here to listen.", owner_id.mention()))
+                   .field(
+                       "For Support Tickets:",
+                       "• The more details you provide, the faster we can help\n\
+                        • Upload your `logs/latest.log` to [McLogs](https://mclo.gs/) - even with no errors, this helps with context\n\
+                        • Detail the steps to reproduce the issue",
+                       false
+                   )
+                   .field(
+                       "For Suggestions:",
+                       "• Explain the problem your suggestion solves\n\
+                        • Describe how it would benefit other users\n\
+                        • Consider potential downsides or conflicts",
+                       false
+                   )
+                   .timestamp(chrono::Utc::now())
+                   .colour(Colour::BLUE);
+
+        let message = CreateMessage::default()
+            .content(format!("{}", SUPPORT_ROLE_ID.mention()))
+            .embed(embed);
+
+        let Some(last_message_id) = thread.last_message_id else {
+            thread.send_message(&ctx, message).await.ok();
+            return;
+        };
+
+        let Ok(last_message) = thread.message(&ctx, last_message_id).await else {
+            thread.send_message(&ctx, message).await.ok();
+            return;
+        };
+
+        let allowed_mentions = CreateAllowedMentions::new()
+            .replied_user(true)
+            .everyone(true)
+            .all_users(true)
+            .all_roles(true);
+
+        let message = message
+            .reference_message(&last_message)
+            .allowed_mentions(allowed_mentions);
+
+        thread.send_message(&ctx, message).await.ok();
     }
 
     async fn message(&self, ctx: Context, new_message: Message) {
@@ -79,7 +134,7 @@ impl EventHandler for SupportAnsweringHandler {
         let parent = match parent.to_channel(&ctx).await {
             Ok(parent) => parent,
             Err(e) => {
-                eprintln!("Error getting parent channel: {}", e);
+                warn!("Error getting parent channel: {}", e);
                 return;
             }
         };
@@ -94,7 +149,7 @@ impl EventHandler for SupportAnsweringHandler {
 
         let available_tags = parent.available_tags;
         let Some(support_tag) = available_tags.get_tag_id("support") else {
-            eprintln!("Support tag not found in available tags");
+            warn!("Support tag not found in available tags");
             return;
         };
 
@@ -103,12 +158,12 @@ impl EventHandler for SupportAnsweringHandler {
         }
 
         let Some(answered_tag) = available_tags.get_tag_id("answered") else {
-            eprintln!("Answered tag not found in available tags");
+            warn!("Answered tag not found in available tags");
             return;
         };
 
         let Some(pending_tag) = available_tags.get_tag_id("pending") else {
-            eprintln!("Pending tag not found in available tags");
+            warn!("Pending tag not found in available tags");
             return;
         };
 
@@ -120,12 +175,12 @@ impl EventHandler for SupportAnsweringHandler {
             Ok(true) => true,
             Ok(false) => false,
             Err(e) => {
-                eprintln!("Error while handling error: {}", e);
+                warn!("Error while handling error: {}", e);
                 return;
             }
         };
 
-        println!(
+        info!(
             "Marking thread {} ({}) as {}",
             thread.id,
             thread.name(),
@@ -178,7 +233,7 @@ pub async fn support_answering(
 
     // Check if the ticket has the support tag
     let Some(support_tag) = available_tags.get_tag_id("support") else {
-        eprintln!("Support tag not found in available tags");
+        warn!("Support tag not found in available tags");
         return Err(WinstonError::TagNotFound("support".to_string()));
     };
 
@@ -197,7 +252,7 @@ pub async fn support_answering(
 
     let target_tag_name = if answered { "answered" } else { "pending" };
     let Some(target_tag) = available_tags.get_tag_id(target_tag_name) else {
-        eprintln!("Target tag not found in available tags");
+        warn!("Target tag not found in available tags");
         return Err(WinstonError::TagNotFound(target_tag_name.to_string()));
     };
 

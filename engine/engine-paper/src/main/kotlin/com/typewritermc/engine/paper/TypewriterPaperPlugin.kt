@@ -31,11 +31,13 @@ import com.typewritermc.engine.paper.ui.ClientSynchronizer
 import com.typewritermc.engine.paper.ui.CommunicationHandler
 import com.typewritermc.engine.paper.ui.PanelHost
 import com.typewritermc.engine.paper.ui.Writers
+import com.typewritermc.engine.paper.utils.ThreadType
 import com.typewritermc.engine.paper.utils.createBukkitDataParser
 import com.typewritermc.engine.paper.utils.registerAll
 import com.typewritermc.engine.paper.utils.unregisterAll
 import com.typewritermc.loader.DependencyChecker
 import dev.jorel.commandapi.CommandAPI
+import dev.jorel.commandapi.CommandAPIBukkit
 import dev.jorel.commandapi.CommandAPIBukkitConfig
 import kotlinx.coroutines.delay
 import lirand.api.architecture.KotlinPlugin
@@ -62,6 +64,7 @@ import kotlin.time.Duration.Companion.seconds
 class TypewriterPaperPlugin : KotlinPlugin(), KoinComponent {
     override fun onLoad() {
         super.onLoad()
+        ThreadType.initialize()
         val modules = module {
             single { this@TypewriterPaperPlugin } withOptions
                     {
@@ -77,7 +80,7 @@ class TypewriterPaperPlugin : KotlinPlugin(), KoinComponent {
                 createdAtStart()
             }
 
-            single(named("version")) { this@TypewriterPaperPlugin.pluginMeta.version.substringBefore("-beta") }
+            single(named("version")) { this@TypewriterPaperPlugin.pluginMeta.version }
 
             singleOf(::TypewriterCore)
             factory<File>(named("baseDir")) { plugin.dataFolder }
@@ -187,8 +190,8 @@ class TypewriterPaperPlugin : KotlinPlugin(), KoinComponent {
         TypewriterUnloadEvent().callEvent()
 
         if (CommandAPI.isLoaded()) {
-            CommandAPI.unregister("typewriter")
             CustomCommandEntry.unregisterAll()
+            CommandAPI.unregister("typewriter", true)
         }
 
         get<PacketInterceptor>().unload()
@@ -230,6 +233,7 @@ class TypewriterPaperPlugin : KotlinPlugin(), KoinComponent {
         get<EntityHandler>().shutdown()
 
         unload()
+        ThreadType.shutdown()
     }
 }
 

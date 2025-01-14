@@ -1,6 +1,7 @@
 use std::sync::Arc;
 
 use actix_web::{middleware::Logger, App, HttpServer};
+use log::{error, info, warn};
 use once_cell::sync::Lazy;
 use poise::serenity_prelude::{self as serenity, GatewayIntents, Mentionable};
 use tokio::signal;
@@ -62,6 +63,7 @@ static DISCORD_CLIENT: Lazy<arc_swap::ArcSwap<Option<serenity::Context>>> =
 #[tokio::main]
 async fn main() {
     dotenv::dotenv().ok();
+    env_logger::init();
 
     let token = CancellationToken::new();
     let webhook_token = token.clone();
@@ -91,11 +93,11 @@ async fn main() {
 
     match signal::ctrl_c().await {
         Ok(()) => {
-            println!("\nShutting down...");
+            info!("\nShutting down...");
             token.cancel();
         }
         Err(err) => {
-            eprintln!("Unable to listen for shutdown signal: {}", err);
+            error!("Unable to listen for shutdown signal: {}", err);
             token.cancel();
         }
     }
@@ -107,7 +109,7 @@ async fn main() {
 
 async fn startup_webhook() {
     // env_logger::init_from_env(env_logger::Env::new().default_filter_or("info"));
-    println!("Starting webhook server...");
+    info!("Starting webhook server...");
     HttpServer::new(|| {
         App::new()
             .wrap(Logger::default())
@@ -124,8 +126,10 @@ async fn startup_webhook() {
 
 async fn startup_discord_bot() {
     let discord_token = std::env::var("DISCORD_TOKEN").expect("missing DISCORD_TOKEN");
-    let intents =
-        GatewayIntents::MESSAGE_CONTENT | GatewayIntents::GUILD_MESSAGES | GatewayIntents::GUILDS;
+    let intents = GatewayIntents::MESSAGE_CONTENT
+        | GatewayIntents::GUILD_MESSAGES
+        | GatewayIntents::GUILDS
+        | GatewayIntents::GUILD_MEMBERS;
 
     let framework = poise::Framework::builder()
         .options(poise::FrameworkOptions {
@@ -159,7 +163,7 @@ async fn startup_discord_bot() {
         .event_handler(ThreadClosedBlockerHandler)
         .await;
 
-    println!("Starting bot...");
+    info!("Starting bot...");
 
     client
         .unwrap()
@@ -171,17 +175,17 @@ async fn startup_discord_bot() {
 async fn schedule_task() {
     let mut fail_count = 0;
     loop {
-        println!("Running schedule task...");
+        info!("Running schedule task...");
         let wait_time = if let Err(e) = cleanup_threads().await {
-            eprintln!("Failed to run cleanup task: {}", e);
+            warn!("Failed to run cleanup task: {}", e);
             fail_count += 1;
             30 * 2u64.pow(fail_count)
         } else {
-            println!("Cleanup task completed");
+            info!("Cleanup task completed");
             fail_count = 0;
             60 * 60
         };
-        println!("Waiting for {} seconds before running again", wait_time);
+        info!("Waiting for {} seconds before running again", wait_time);
         tokio::time::sleep(std::time::Duration::from_secs(wait_time)).await;
     }
 }
@@ -190,11 +194,11 @@ async fn on_error(error: poise::FrameworkError<'_, Data, WinstonError>) {
     match error {
         poise::FrameworkError::Setup { error, .. } => panic!("Failed to start bot: {:?}", error),
         poise::FrameworkError::Command { error, ctx, .. } => {
-            eprintln!("Error in command `{}`: {:?}", ctx.command().name, error,);
+            warn!("Error in command `{}`: {:?}", ctx.command().name, error,);
         }
         error => {
             if let Err(e) = poise::builtins::on_error(error).await {
-                eprintln!("Error while handling error: {}", e)
+                warn!("Error while handling error: {}", e)
             }
         }
     }
@@ -215,7 +219,7 @@ pub async fn check_has_role(
     let has_role = ctx.author().has_role(ctx, GUILD_ID, role_id).await?;
 
     if !has_role {
-        eprintln!(
+        warn!(
             "User {} is not a {} and tried to run command",
             ctx.author().name,
             role_id.mention(),

@@ -1,5 +1,6 @@
 use async_trait::async_trait;
 use indoc::formatdoc;
+use log::warn;
 use poise::serenity_prelude::{
     Context, CreateMessage, EditMessage, EventHandler, Mentionable, Message,
 };
@@ -31,7 +32,7 @@ impl EventHandler for ThreadClosedBlockerHandler {
         let parent = match parent.to_channel(&ctx).await {
             Ok(parent) => parent,
             Err(e) => {
-                eprintln!("Error getting parent channel: {}", e);
+                warn!("Error getting parent channel: {}", e);
                 return;
             }
         };
@@ -80,14 +81,14 @@ impl EventHandler for ThreadClosedBlockerHandler {
             .await;
 
         if let Err(e) = new_message.delete(&ctx).await {
-            eprintln!("Error deleting message: {}", e);
+            warn!("Error deleting message: {}", e);
             return;
         }
 
         let mut error_message = match error_message {
             Ok(error_message) => error_message,
             Err(e) => {
-                eprintln!("Error sending error message: {}", e);
+                warn!("Error sending error message: {}", e);
                 return;
             }
         };
@@ -114,7 +115,7 @@ impl EventHandler for ThreadClosedBlockerHandler {
                 )
                 .await
             {
-                eprintln!("Error editing error message: {}", e);
+                warn!("Error editing error message: {}", e);
                 return;
             }
 
@@ -122,7 +123,7 @@ impl EventHandler for ThreadClosedBlockerHandler {
         }
 
         if let Err(e) = error_message.delete(&ctx).await {
-            eprintln!("Error deleting error message: {}", e);
+            warn!("Error deleting error message: {}", e);
             return;
         }
     }

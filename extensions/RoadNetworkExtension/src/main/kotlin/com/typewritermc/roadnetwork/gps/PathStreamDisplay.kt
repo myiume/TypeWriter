@@ -21,6 +21,7 @@ import com.typewritermc.roadnetwork.RoadNetworkEntry
 import com.typewritermc.roadnetwork.RoadNetworkManager
 import com.typewritermc.roadnetwork.pathfinding.PFEmptyEntity
 import com.typewritermc.roadnetwork.pathfinding.PFInstanceSpace
+import com.typewritermc.roadnetwork.pathfinding.instanceSpace
 import com.typewritermc.roadnetwork.roadNetworkMaxDistance
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
@@ -146,8 +147,8 @@ private class PlayerPathStreamDisplay(
     }
 
     private fun refreshPath() = DISPATCHERS_ASYNC.launch {
-        val start = startLocation(player).firstWalkableLocationBelow
-        val end = endLocation(player).firstWalkableLocationBelow
+        val start = startLocation(player).firstWalkableLocationBelow ?: return@launch
+        val end = endLocation(player).firstWalkableLocationBelow ?: return@launch
 
         // When the start and end location are the same, we don't need to find a path.
         if ((start.distanceSqrt(end) ?: Double.MAX_VALUE) < 1) {
@@ -187,7 +188,7 @@ private class PlayerPathStreamDisplay(
         }
 
         val entity = PFEmptyEntity(start.toProperty(), searchRange = roadNetworkMaxDistance.toFloat())
-        val instance = PFInstanceSpace(start.world)
+        val instance = start.world.instanceSpace
         val pathfinder = HydrazinePathFinder(entity, instance)
 
         val additionalRadius = pathfinder.subject().width().toDouble()

@@ -1,10 +1,12 @@
 package com.typewritermc.engine.paper.entry.entries
 
+import com.google.common.collect.Maps
+import com.google.common.collect.Sets
 import com.typewritermc.core.entries.Ref
+import com.typewritermc.core.entries.ref
 import com.typewritermc.core.extension.annotations.Help
 import com.typewritermc.core.extension.annotations.Tags
-import com.typewritermc.engine.paper.entry.AudienceManager
-import com.typewritermc.engine.paper.entry.ManifestEntry
+import com.typewritermc.engine.paper.entry.*
 import com.typewritermc.engine.paper.plugin
 import lirand.api.extensions.events.unregister
 import lirand.api.extensions.server.server
@@ -23,8 +25,18 @@ import java.util.concurrent.ConcurrentSkipListSet
 annotation class ChildOnly
 
 @Tags("audience")
-interface AudienceEntry : ManifestEntry {
+interface AudienceEntry : ManifestEntry, PlaceholderEntry {
     fun display(): AudienceDisplay
+
+    override fun parser() = placeholderParser {
+        literal("players") {
+            supply {
+                val manager = get<AudienceManager>(AudienceManager::class.java)
+                val display = manager[ref()]
+                display?.players?.joinToString(", ") { it.name } ?: ""
+            }
+        }
+    }
 }
 
 
@@ -58,8 +70,8 @@ enum class AudienceDisplayState(val displayName: String, val color: String) {
 abstract class AudienceDisplay : Listener {
     var isActive = false
         private set
-    private val playerIds: ConcurrentSkipListSet<UUID> = ConcurrentSkipListSet()
-    open val players: List<Player> get() = server.onlinePlayers.filter { it.uniqueId in playerIds }
+    private val playerIds: MutableSet<UUID> = Sets.newConcurrentHashSet()
+    open val players: List<Player> get() = playerIds.mapNotNull { server.getPlayer(it) }
 
     open fun displayState(player: Player): AudienceDisplayState {
         if (player.uniqueId in playerIds) return AudienceDisplayState.IN_AUDIENCE
@@ -107,9 +119,9 @@ class PassThroughDisplay : AudienceDisplay() {
 abstract class AudienceFilter(
     private val ref: Ref<out AudienceFilterEntry>
 ) : AudienceDisplay() {
-    private val inverted = (ref.get() as? Invertible)?.inverted ?: false
-    private val filteredPlayers: ConcurrentSkipListSet<UUID> = ConcurrentSkipListSet()
-    override val players: List<Player> get() = server.onlinePlayers.filter { it.uniqueId in filteredPlayers }
+    private val inverted = (ref.get() as? Invertible)?.inverted == true
+    private val filteredPlayers: MutableSet<UUID> = Sets.newConcurrentHashSet()
+    override val players: List<Player> get() = filteredPlayers.mapNotNull { server.getPlayer(it) }
 
     protected val consideredPlayers: List<Player> get() = super.players
 
